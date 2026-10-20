@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>KWING POS</title>
-<meta name="theme-color" content="#0D5A42">
+<title>POS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: signage-style top bar, tabbed workspace — till grid + cart rail, kitchen columns, sales, menu editor */
+/* Layout: signage-style top bar, tabbed workspace — till grid + cart rail, kitchen columns, sales, menu editor.
+   --brand / --accent (and their -ink pairs) are replaced per shop from config.js. */
 :root{
   --bg:#EEF2EE; --surface:#FFFFFF; --surface-2:#F5F8F5; --ink:#14211C; --muted:#5B6B63; --line:#D7DFD9;
-  --brand:#0D5A42; --brand-ink:#FFFFFF; --mustard:#F2B705; --mustard-ink:#1D1600;
+  --brand:#0D5A42; --brand-ink:#FFFFFF; --accent:#F2B705; --accent-ink:#1D1600;
   --chili:#C93A25; --ok:#1F8A4C; --warn:#B87900; --wa:#0B6152; --wa-ink:#FFFFFF;
   --f-display:"Anton","Impact","Arial Narrow",sans-serif;
   --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -21,12 +21,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E1613; --surface:#16211D; --surface-2:#1C2924; --ink:#E6EEE9; --muted:#97A89F; --line:#2A3A33;
-  --brand:#2FA77B; --brand-ink:#05140E; --mustard:#F5C430; --mustard-ink:#1D1600;
+  --brand:#2FA77B; --brand-ink:#05140E; --accent:#F5C430; --accent-ink:#1D1600;
   --chili:#EF6A52; --ok:#4CC27F; --warn:#E3A63A; --wa:#128C7E; --wa-ink:#FFFFFF;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E1613; --surface:#16211D; --surface-2:#1C2924; --ink:#E6EEE9; --muted:#97A89F; --line:#2A3A33;
-  --brand:#2FA77B; --brand-ink:#05140E; --mustard:#F5C430; --mustard-ink:#1D1600;
+  --brand:#2FA77B; --brand-ink:#05140E; --accent:#F5C430; --accent-ink:#1D1600;
   --chili:#EF6A52; --ok:#4CC27F; --warn:#E3A63A; --wa:#128C7E; --wa-ink:#FFFFFF;
   color-scheme:dark}
 
@@ -39,7 +39,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 
 /* Sign-in */
@@ -50,9 +50,9 @@ button{cursor:pointer}
 
 /* Top bar */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:14px 10px;border-bottom:1px solid var(--line);margin-bottom:18px}
-.brand{display:flex;align-items:baseline;gap:10px}
-.brand h1{font-family:var(--f-display);font-weight:400;font-size:32px;letter-spacing:1px;margin:0;line-height:1;text-transform:uppercase}
-.brand h1 span{background:var(--mustard);color:var(--mustard-ink);padding:0 5px;margin-left:1px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:32px;letter-spacing:1px;margin:0;line-height:1;text-transform:uppercase;overflow-wrap:anywhere}
+.brand h1 span{background:var(--accent);color:var(--accent-ink);padding:0 5px;margin-left:1px}
 .brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .tabs{display:flex;gap:4px;overflow-x:auto;max-width:100%;margin-left:auto}
 .tab{border:1px solid transparent;background:none;padding:8px 14px;border-radius:999px;font-weight:600;white-space:nowrap;color:var(--muted);display:flex;gap:6px;align-items:center}
@@ -80,7 +80,7 @@ h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.4
 .item b{font-size:15px;line-height:1.2}
 .item .desc{font-size:12px;color:var(--muted);flex:1}
 .item .price{font-family:var(--f-mono);font-weight:600;font-size:15px}
-.item .qtybadge{position:absolute;top:8px;right:8px;background:var(--mustard);color:var(--mustard-ink);font-weight:700;font-size:12px;border-radius:999px;padding:1px 8px}
+.item .qtybadge{position:absolute;top:8px;right:8px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:12px;border-radius:999px;padding:1px 8px}
 .item[disabled]{opacity:.5;cursor:not-allowed}
 .item[disabled]::after{content:"SOLD OUT";position:absolute;bottom:10px;right:10px;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--chili)}
 
@@ -111,7 +111,7 @@ h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.4
 .btn{border:0;border-radius:8px;padding:12px 14px;font-weight:700;background:var(--brand);color:var(--brand-ink)}
 .btn.big{font-size:16px;padding:14px}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
-.btn.yellow{background:var(--mustard);color:var(--mustard-ink)}
+.btn.yellow{background:var(--accent);color:var(--accent-ink)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.sm{padding:8px 10px;font-size:13px}
 
@@ -140,7 +140,7 @@ h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.4
 .t-items li small{color:var(--muted)}
 .t-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
 .t-addr{font-size:13px;font-weight:600;background:var(--surface-2);border-left:3px solid var(--brand);padding:4px 8px}
-.t-note{font-size:13px;background:var(--surface-2);border-left:3px solid var(--mustard);padding:4px 8px}
+.t-note{font-size:13px;background:var(--surface-2);border-left:3px solid var(--accent);padding:4px 8px}
 .t-actions{display:flex;gap:6px;flex-wrap:wrap}
 .t-actions .btn{flex:1}
 .col .empty{padding:30px 6px}
@@ -159,7 +159,7 @@ h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.4
 .bar-row .track{height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
 .bar-row .fill{display:block;height:100%;background:var(--brand)}
 .bar-row .fill.wa{background:var(--wa)}
-.bar-row .fill.m{background:var(--mustard)}
+.bar-row .fill.m{background:var(--accent)}
 .bar-row span:last-child{text-align:right;font-family:var(--f-mono)}
 .tbl-wrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -194,31 +194,47 @@ td.r,th.r{text-align:right}
 @media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.item{min-height:110px}.m-row{grid-template-columns:minmax(0,1fr) 80px}.m-row .toggle{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<script src="config.js"></script>
+<script>
+/* Apply the shop's colours before first paint. */
+(function(){
+  var c = (window.SHOP_CONFIG || {}).colors || {};
+  function ink(hex){ var m = /^#?([0-9a-f]{6})$/i.exec(hex||""); if(!m) return "#FFFFFF";
+    var n = parseInt(m[1],16), ch = [n>>16&255, n>>8&255, n&255].map(function(v){ v/=255; return v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+    return (.2126*ch[0] + .7152*ch[1] + .0722*ch[2]) > .4 ? "#111111" : "#FFFFFF"; }
+  function vars(b, a){ return (b ? "--brand:"+b+";--brand-ink:"+ink(b)+";" : "") + (a ? "--accent:"+a+";--accent-ink:"+ink(a)+";" : ""); }
+  var light = vars(c.brand, c.accent), dark = vars(c.brandDark || c.brand, c.accentDark || c.accent);
+  var s = document.createElement("style");
+  s.textContent = ":root{"+light+"}@media (prefers-color-scheme: dark){:root:not([data-theme=\"light\"]){"+dark+"}}:root[data-theme=\"dark\"]{"+dark+"}";
+  document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 
 <!-- SIGN-IN -->
 <section class="gate" id="gate">
   <form class="gate-card" id="signin" novalidate>
-    <div class="brand"><h1>KW<span>ING</span></h1><small>Staff point of sale</small></div>
-    <p id="gate-msg">Sign in with your KWING staff email and password.</p>
+    <div class="brand"><h1 class="logo"></h1><small>Staff point of sale</small></div>
+    <p>Sign in with your <span class="shop-name"></span> staff email and password.</p>
     <label class="field" for="si-email">Email<input id="si-email" type="email" autocomplete="username" required></label>
     <label class="field" for="si-pass">Password<input id="si-pass" type="password" autocomplete="current-password" required></label>
     <div class="gate-err" id="si-err" role="alert" hidden></div>
     <button class="btn big" id="si-btn">Sign in</button>
   </form>
   <div class="gate-card" id="not-staff" hidden>
-    <div class="brand"><h1>KW<span>ING</span></h1></div>
-    <h2>Not on the KWING staff list</h2>
+    <div class="brand"><h1 class="logo"></h1></div>
+    <h2>Not on the <span class="shop-name"></span> staff list</h2>
     <p id="ns-email"></p>
     <button class="btn ghost" id="ns-out">Sign out</button>
   </div>
   <div class="gate-card" id="checking" hidden><p>Checking your account…</p></div>
+  <div class="gate-card" id="no-config" hidden><h2>Setup needed</h2><p>This POS has no shop settings yet. Deploy it with <code>tools/deploy-site.mjs</code> so it gets a config.js.</p></div>
 </section>
 
 <div id="app" hidden>
 <header class="top">
-  <div class="brand"><h1>KW<span>ING</span></h1><small>Point of sale</small></div>
+  <div class="brand"><h1 class="logo"></h1><small>Point of sale</small></div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" data-view="till" aria-selected="true">Till</button>
     <button class="tab" role="tab" data-view="kitchen" aria-selected="false">Kitchen <span class="count" id="kitchen-count" hidden>0</span></button>
@@ -243,12 +259,12 @@ td.r,th.r{text-align:right}
         <div class="total"><span class="eyebrow" style="margin:0">Total</span><strong class="num" id="cart-total">R0</strong></div>
         <div class="row2">
           <label class="field" for="c-name">Customer<input id="c-name" placeholder="Walk-in" autocomplete="off"></label>
-          <label class="field" for="c-type">Order type<select id="c-type"><option value="collect">Collect / eat-in</option><option value="delivery">Delivery (+R15)</option></select></label>
+          <label class="field" for="c-type" id="type-field">Order type<select id="c-type"><option value="collect">Collect / eat-in</option><option value="delivery" id="opt-delivery">Delivery</option></select></label>
         </div>
-        <label class="field" for="c-addr" id="addr-field" hidden>Delivery address<input id="c-addr" placeholder="e.g. 14 Mahlangu St, Zone 3" autocomplete="off"></label>
-        <label class="field" for="c-phone">WhatsApp number (optional)<input id="c-phone" inputmode="tel" placeholder="082 123 4567" autocomplete="off"><span class="hint">We'll WhatsApp them when it's ready.</span></label>
-        <label class="field" for="c-note">Kitchen note<input id="c-note" placeholder="e.g. no atchar, extra chilli" autocomplete="off"></label>
-        <div class="pay" id="pay"><button data-pay="cash" aria-pressed="true">Cash</button><button data-pay="card" aria-pressed="false">Card</button><button data-pay="eft" aria-pressed="false">EFT</button></div>
+        <label class="field" for="c-addr" id="addr-field" hidden>Delivery address<input id="c-addr" placeholder="Street, number, area" autocomplete="off"></label>
+        <label class="field wa-only" for="c-phone">WhatsApp number (optional)<input id="c-phone" inputmode="tel" placeholder="082 123 4567" autocomplete="off"><span class="hint">We'll WhatsApp them when it's ready.</span></label>
+        <label class="field" for="c-note">Kitchen note<input id="c-note" placeholder="e.g. no onions, extra sauce" autocomplete="off"></label>
+        <div class="pay" id="pay"></div>
         <label class="check" for="c-paid"><input type="checkbox" id="c-paid" checked> Paid now</label>
         <div class="row2" id="cash-row">
           <label class="field" for="c-tender">Cash received<input id="c-tender" inputmode="decimal" placeholder="R0"></label>
@@ -262,8 +278,8 @@ td.r,th.r{text-align:right}
 
 <!-- KITCHEN -->
 <section class="view" id="view-kitchen" hidden>
-  <div class="section-head"><div><p class="eyebrow">Live order board</p><h2>Kitchen</h2></div><span class="t-meta">Till and WhatsApp orders land here together. Tickets older than 20 min are flagged.</span></div>
-  <div class="wa-note"><span aria-hidden="true">💬</span><span><b>WhatsApp orders come in by themselves.</b> Customers order on the KWING WhatsApp number and the bot puts confirmed orders on this board. When you tap <b>Mark ready</b> on an order with a phone number, the customer gets a WhatsApp message.</span></div>
+  <div class="section-head"><div><p class="eyebrow">Live order board</p><h2>Kitchen</h2></div><span class="t-meta">New orders appear here straight away. Tickets older than 20 min are flagged.</span></div>
+  <div class="wa-note wa-only"><span aria-hidden="true">💬</span><span><b>WhatsApp orders come in by themselves.</b> Customers order on the <span class="shop-name"></span> WhatsApp number and the bot puts confirmed orders on this board. When you tap <b>Mark ready</b> on an order with a phone number, the customer gets a WhatsApp message.</span></div>
   <div class="board">
     <div class="col"><div class="col-head"><h3>New</h3><span class="n" id="n-new">0</span></div><div class="col-body" id="col-new"></div></div>
     <div class="col"><div class="col-head"><h3>Cooking</h3><span class="n" id="n-cooking">0</span></div><div class="col-body" id="col-cooking"></div></div>
@@ -289,12 +305,12 @@ td.r,th.r{text-align:right}
 
 <!-- MENU -->
 <section class="view" id="view-menu" hidden>
-  <div class="section-head"><div><p class="eyebrow">Prices &amp; stock</p><h2>Menu</h2></div><span class="t-meta">Changes save straight away. The WhatsApp bot uses this menu too, so sold-out items stop being offered at once.</span></div>
+  <div class="section-head"><div><p class="eyebrow">Prices &amp; stock</p><h2>Menu</h2></div><span class="t-meta" id="menu-hint">Changes save straight away.</span></div>
   <div class="menu-list" id="menu-list"></div>
   <div class="panel" style="margin-top:18px">
     <p class="eyebrow">Add a menu item</p>
     <form class="add-form" id="add-form">
-      <label class="field" for="a-name">Name<input id="a-name" required placeholder="e.g. Cheese Kota"></label>
+      <label class="field" for="a-name">Name<input id="a-name" required placeholder="e.g. Cheese Burger"></label>
       <label class="field" for="a-cat">Category<select id="a-cat"></select></label>
       <label class="field" for="a-price">Price (R)<input id="a-price" inputmode="decimal" required placeholder="45"></label>
       <label class="field" for="a-desc">Description<input id="a-desc" placeholder="What's in it"></label>
@@ -308,26 +324,54 @@ td.r,th.r{text-align:right}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js" integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy" crossorigin="anonymous"></script>
 <script>
-/* Public project URL + anon key: safe in the browser. Row Level Security limits staff data to people on public.kwing_staff. */
-const SUPABASE_URL = "https://wyxxrwrexjslkqygfcka.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5eHhyd3JleGpzbGtxeWdmY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTYyMTAsImV4cCI6MjEwNTMzMjIxMH0.88XbKcDYV6ebiXKCqjIaVV-0U-bGWRgXYbyIHO_c7ws";
-const DELIVERY_FEE = 15;
-const CATS = [["kota","Kotas"],["bunny","Bunny chows"],["pap","Pap plates"],["sides","Sides"],["drinks","Drinks"]];
+/* Everything shop-specific comes from config.js (generated from clients/<shop>/shop.json).
+   The Supabase URL + anon key are public; Row Level Security limits data to people on the staff list. */
+const CFG = window.SHOP_CONFIG || null;
+const $ = s => document.querySelector(s);
+
+const SHOP = CFG?.name || "POS";
+const DELIVERY_ON = CFG?.delivery?.enabled !== false;
+const DELIVERY_FEE = Number(CFG?.delivery?.fee ?? 0);
+const WA_ON = CFG?.whatsapp?.enabled !== false;
+const CATS = (CFG?.categories || []).map(c => [c.id, c.label]);
 const CAT_NAME = Object.fromEntries(CATS);
 const PAY_NAME = {cash:"Cash", card:"Card", eft:"EFT"};
+const PAYMENTS = (CFG?.payments || ["cash","card","eft"]).filter(p => PAY_NAME[p]);
+const STAFF_CHECK = CFG?.supabase?.staffCheck || "is_pos_staff";
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+const R = n => "R" + (Math.round(Number(n)*100)/100).toLocaleString("en-ZA",{minimumFractionDigits:0,maximumFractionDigits:2});
+const cents = n => Math.round(Number(n)*100);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* Branding */
+(function brand(){
+  const text = CFG?.logo?.text || SHOP, hi = CFG?.logo?.highlight || "";
+  const cut = hi && text.toUpperCase().endsWith(hi.toUpperCase()) ? text.length - hi.length : text.length;
+  const logo = esc(text.slice(0, cut)) + (cut < text.length ? `<span>${esc(text.slice(cut))}</span>` : "");
+  document.querySelectorAll(".logo").forEach(el => el.innerHTML = logo);
+  document.querySelectorAll(".shop-name").forEach(el => el.textContent = SHOP);
+  document.title = `${SHOP} POS`;
+  document.querySelectorAll(".wa-only").forEach(el => el.hidden = !WA_ON);
+  if (!DELIVERY_ON){ $("#opt-delivery").remove(); $("#type-field").hidden = true; }
+  else $("#opt-delivery").textContent = DELIVERY_FEE ? `Delivery (+${R(DELIVERY_FEE)})` : "Delivery";
+  $("#pay").innerHTML = PAYMENTS.map((p,i) => `<button data-pay="${p}" aria-pressed="${i===0}">${PAY_NAME[p]}</button>`).join("");
+  $("#menu-hint").textContent = WA_ON ? "Changes save straight away. The WhatsApp bot uses this menu too, so sold-out items stop being offered at once." : "Changes save straight away.";
+})();
+
+if (!CFG || !window.supabase){
+  ["signin","not-staff","checking"].forEach(id => $("#"+id).hidden = true); $("#no-config").hidden = false;
+  if (CFG && !window.supabase) $("#no-config p").textContent = "Couldn't load the POS. Check your internet and reload the page.";
+  throw new Error("POS not configured");
+}
+
+const sb = supabase.createClient(CFG.supabase.url, CFG.supabase.anonKey, {auth:{persistSession:true, autoRefreshToken:true}});
 
 let menuItems = [];          // rows of public.menu_items
 let orders = new Map();      // id -> row of public.orders (today's + any still open)
 let cart = {};               // item_id -> qty
-let cat = "all", payMethod = "cash";
+let cat = "all", payMethod = PAYMENTS[0] || "cash";
 let channel = null, started = false, currentUserId = null;
 
-const $ = s => document.querySelector(s);
-const R = n => "R" + (Math.round(Number(n)*100)/100).toLocaleString("en-ZA",{minimumFractionDigits:0,maximumFractionDigits:2});
-const cents = n => Math.round(Number(n)*100);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const byId = id => menuItems.find(m => m.id === id);
 const t0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 const ts = o => new Date(o.created_at).getTime();
@@ -336,6 +380,7 @@ const todays = () => allOrders().filter(o => ts(o) >= t0().getTime());
 const active = () => allOrders().filter(o => ["new","cooking","ready"].includes(o.status));
 const hhmm = t => new Date(t).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
 const itemsOf = o => Array.isArray(o.items) ? o.items : [];
+const catLabel = id => CAT_NAME[id] || id;
 
 function toast(msg, err=false){ const t=$("#toast"); t.textContent=msg; t.classList.toggle("err", err); t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true, err?5000:2600); }
 function setSync(state, text){ $("#sync-dot").className = "dot" + (state==="live"?" live":state==="bad"?" bad":""); $("#sync-text").textContent = text; }
@@ -374,7 +419,7 @@ async function onSession(session){
   if (session.user.id === currentUserId && started) return;
   currentUserId = session.user.id;
   showGate("checking");
-  const {data, error} = await sb.rpc("is_kwing_staff");
+  const {data, error} = await sb.rpc(STAFF_CHECK);
   if (error){ showGate("signin", "Couldn't check the staff list. Check your internet and sign in again."); await sb.auth.signOut(); return; }
   if (!data){ $("#ns-email").textContent = "Signed in as " + (session.user.email||"") + ". Ask the owner to add you."; showGate("notstaff"); return; }
   $("#who").textContent = session.user.email || "";
@@ -403,8 +448,8 @@ async function loadOrders(){
   renderAll(); return true;
 }
 function startLive(){
-  stopLive();
-  channel = sb.channel("kwing-orders")
+  stopLive(true);
+  channel = sb.channel("pos-orders")
     .on("postgres_changes", {event:"*", schema:"public", table:"orders"}, p => {
       if (p.eventType==="DELETE"){ orders.delete(p.old.id); }
       else {
@@ -415,11 +460,11 @@ function startLive(){
       renderAll();
     })
     .subscribe(status => {
-      if (status==="SUBSCRIBED"){ setSync("live","Live · till and WhatsApp orders"); loadOrders(); }
+      if (status==="SUBSCRIBED"){ setSync("live", WA_ON ? "Live · till and WhatsApp orders" : "Live"); loadOrders(); }
       else if (status==="CHANNEL_ERROR" || status==="TIMED_OUT" || status==="CLOSED") setSync("bad","Live updates paused · reconnecting…");
     });
 }
-function stopLive(){ if (channel){ sb.removeChannel(channel); channel = null; } started = false; }
+function stopLive(keepStarted){ if (channel){ sb.removeChannel(channel); channel = null; } if (!keepStarted) started = false; }
 async function startApp(){
   if (started) return; started = true;
   setSync("", "Connecting…");
@@ -436,14 +481,16 @@ document.querySelectorAll(".tab").forEach(b => b.onclick = () => showView(b.data
 function showView(v){
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.view===v));
   document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== "view-"+v);
-  try{ localStorage.setItem("kwing-tab", v); }catch(e){}
+  try{ localStorage.setItem("pos-tab", v); }catch(e){}
 }
-try{ const t = localStorage.getItem("kwing-tab"); if (t && document.getElementById("view-"+t)) showView(t); }catch(e){}
+try{ const t = localStorage.getItem("pos-tab"); if (t && document.getElementById("view-"+t)) showView(t); }catch(e){}
 
 /* ---------- Till ---------- */
 function renderCats(){
-  const list = [["all","All"], ...CATS.filter(([k]) => menuItems.some(m => m.category===k))];
-  $("#cats").innerHTML = list.map(([k,l]) => `<button class="cat" aria-pressed="${k===cat}" data-cat="${k}">${esc(l)}</button>`).join("");
+  const known = CATS.filter(([k]) => menuItems.some(m => m.category===k));
+  const extra = [...new Set(menuItems.map(m => m.category))].filter(k => !CAT_NAME[k]).map(k => [k,k]);
+  const list = [["all","All"], ...known, ...extra];
+  $("#cats").innerHTML = list.map(([k,l]) => `<button class="cat" aria-pressed="${k===cat}" data-cat="${esc(k)}">${esc(l)}</button>`).join("");
   $("#cats").querySelectorAll(".cat").forEach(b => b.onclick = () => { cat=b.dataset.cat; renderCats(); renderGrid(); });
 }
 function renderGrid(){
@@ -454,11 +501,11 @@ function renderGrid(){
     : `<div class="empty">No menu items yet. Add some on the Menu tab.</div>`;
   $("#grid").querySelectorAll(".item").forEach(b => b.onclick = () => { cart[b.dataset.id]=(cart[b.dataset.id]||0)+1; renderGrid(); renderCart(); });
 }
-const isDelivery = () => $("#c-type").value==="delivery";
+const isDelivery = () => DELIVERY_ON && $("#c-type").value==="delivery";
 function cartLines(){ return Object.entries(cart).filter(([id,q]) => q>0 && byId(id)); }
 function cartSums(){
   const sub = cartLines().reduce((s,[id,q]) => s + cents(byId(id).price_zar)*q, 0);
-  const fee = sub>0 && isDelivery() ? DELIVERY_FEE*100 : 0;
+  const fee = sub>0 && isDelivery() ? cents(DELIVERY_FEE) : 0;
   return {sub, fee, total: sub+fee};   // in cents
 }
 function renderCart(){
@@ -466,7 +513,7 @@ function renderCart(){
   $("#addr-field").hidden = !isDelivery();
   $("#cart-lines").innerHTML = lines.length ? lines.map(([id,q]) => { const m=byId(id); return `<div class="line"><span class="nm">${esc(m.name)}</span>
     <span class="stepper"><button data-d="-1" data-id="${esc(id)}" aria-label="One less">−</button><span class="num">${q}</span><button data-d="1" data-id="${esc(id)}" aria-label="One more">+</button></span>
-    <span class="amt num">${R(m.price_zar*q)}</span></div>`; }).join("") + (isDelivery()?`<div class="line"><span class="nm">Delivery</span><span></span><span class="amt num">${R(DELIVERY_FEE)}</span></div>`:"")
+    <span class="amt num">${R(m.price_zar*q)}</span></div>`; }).join("") + (isDelivery() && DELIVERY_FEE ?`<div class="line"><span class="nm">Delivery</span><span></span><span class="amt num">${R(DELIVERY_FEE)}</span></div>`:"")
     : `<div class="empty">Tap menu items to start an order.</div>`;
   $("#cart-lines").querySelectorAll(".stepper button").forEach(b => b.onclick = () => {
     const id=b.dataset.id; cart[id]=(cart[id]||0)+Number(b.dataset.d); if(cart[id]<=0) delete cart[id]; renderGrid(); renderCart(); });
@@ -487,7 +534,7 @@ $("#checkout").onclick = async () => {
   const {sub, fee, total} = cartSums();
   const address = $("#c-addr").value.trim();
   if (isDelivery() && !address){ toast("Add the delivery address.", true); $("#c-addr").focus(); return; }
-  const phone = normPhone($("#c-phone").value);
+  const phone = WA_ON ? normPhone($("#c-phone").value) : "";
   if (phone===null){ toast("That WhatsApp number doesn't look right. Use e.g. 082 123 4567.", true); $("#c-phone").focus(); return; }
   const paid = $("#c-paid").checked;
   const tender = parseFloat(($("#c-tender").value||"").replace(/[^\d.]/g,""));
@@ -544,17 +591,17 @@ function renderKitchen(){
           ${s!=="ready" && !o.paid?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-paid="1">Mark paid</button>`:""}
           <button class="btn sm ${s==="ready"?"ghost":s==="cooking"?"yellow":""}" data-id="${esc(o.id)}" data-next="${NEXT[s][0]}">${nextLabel}</button>
         </div>
-      </article>`; }).join("") : `<div class="empty">${s==="new"?"No new orders. Till and WhatsApp orders appear here.":s==="cooking"?"Nothing on the stove.":"Nothing waiting for pickup."}</div>`;
+      </article>`; }).join("") : `<div class="empty">${s==="new"?"No new orders yet.":s==="cooking"?"Nothing on the stove.":"Nothing waiting for pickup."}</div>`;
   });
   document.querySelectorAll("#view-kitchen [data-next]").forEach(b => b.onclick = () => {
     b.disabled = true; const o = orders.get(b.dataset.id); const next = b.dataset.next;
     const patch = {status:next}; if (next==="collected" && !o.paid) patch.paid = true;
-    updateOrder(b.dataset.id, patch, next==="ready" && o.phone ? `#${o.order_number} ready · WhatsApp message on its way` : null);
+    updateOrder(b.dataset.id, patch, next==="ready" && o.phone && WA_ON ? `#${o.order_number} ready · WhatsApp message on its way` : null);
   });
   document.querySelectorAll("#view-kitchen [data-paid]").forEach(b => b.onclick = () => { b.disabled = true; updateOrder(b.dataset.id, {paid:true}, "Marked paid"); });
   const nNew = active().filter(o=>o.status==="new").length;
   $("#kitchen-count").textContent = nNew; $("#kitchen-count").hidden = !nNew;
-  document.title = nNew ? `(${nNew}) KWING POS` : "KWING POS";
+  document.title = nNew ? `(${nNew}) ${SHOP} POS` : `${SHOP} POS`;
 }
 
 /* ---------- Sales ---------- */
@@ -569,28 +616,29 @@ function renderSales(){
   const paid = t.filter(o=>o.paid), unpaid = t.filter(o=>!o.paid);
   const wa = t.filter(o=>o.channel==="whatsapp"), ctr = t.filter(o=>o.channel!=="whatsapp");
   $("#k-rev").textContent = R(sum(t)); $("#k-rev-s").textContent = t.length ? "Average " + R(sum(t)/t.length) : "";
-  $("#k-orders").textContent = t.length; $("#k-orders-s").textContent = `${ctr.length} counter · ${wa.length} WhatsApp`;
+  $("#k-orders").textContent = t.length; $("#k-orders-s").textContent = WA_ON || wa.length ? `${ctr.length} counter · ${wa.length} WhatsApp` : "";
   $("#k-paid").textContent = R(sum(paid)); $("#k-paid-s").textContent = `${paid.length} order${paid.length===1?"":"s"}`;
   $("#k-unpaid").textContent = R(sum(unpaid)); $("#k-unpaid-s").textContent = `${unpaid.length} order${unpaid.length===1?"":"s"} still to pay`;
-  bars($("#chan-mix"), t.length ? [["Counter", sum(ctr), `${R(sum(ctr))}`], ["WhatsApp", sum(wa), `${R(sum(wa))}`]] : [], "wa");
+  bars($("#chan-mix"), t.length ? [["Counter", sum(ctr), R(sum(ctr))], ...(WA_ON || wa.length ? [["WhatsApp", sum(wa), R(sum(wa))]] : [])] : [], "wa");
   const pm = {}; t.forEach(o=>{ const k=o.paid?(PAY_NAME[o.payment]||o.payment):"Unpaid"; pm[k]=(pm[k]||0)+cents(o.total_zar)/100; });
   bars($("#pay-mix"), Object.entries(pm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v,R(v)]), "m");
   const units = {}; t.forEach(o=>itemsOf(o).forEach(i=>units[i.name]=(units[i.name]||0)+Number(i.qty||0)));
   bars($("#top-items"), Object.entries(units).sort((a,b)=>b[1]-a[1]).slice(0,8));
   const st = s => s[0].toUpperCase()+s.slice(1);
   $("#orders-tbody").innerHTML = t.length ? t.map(o=>`<tr><td class="num">#${esc(o.order_number)}</td><td class="num">${hhmm(o.created_at)}</td><td>${esc(o.customer_name||"")}</td><td>${o.channel==="whatsapp"?`<span class="chip wa">WhatsApp</span>`:"Counter"}</td><td>${itemsOf(o).reduce((s,i)=>s+Number(i.qty||0),0)} items</td><td>${o.paid?esc(PAY_NAME[o.payment]||o.payment):`<span class="chip unpaid">Unpaid</span>`}</td><td>${esc(st(o.status))}</td><td class="r num">${R(o.total_zar)}</td></tr>`).join("")
-    : `<tr><td colspan="8"><div class="empty">No orders yet today. Ring one up on the Till, or wait for a WhatsApp order.</div></td></tr>`;
+    : `<tr><td colspan="8"><div class="empty">No orders yet today. Ring one up on the Till.</div></td></tr>`;
 }
 $("#reload-sales").onclick = async () => { if (await loadOrders()) toast("Sales refreshed"); };
 
 /* ---------- Menu editor ---------- */
 function renderMenuAdmin(){
-  $("#menu-list").innerHTML = CATS.map(([k,l]) => {
+  const groups = [...CATS, ...[...new Set(menuItems.map(m => m.category))].filter(k => !CAT_NAME[k]).map(k => [k,k])];
+  $("#menu-list").innerHTML = groups.map(([k,l]) => {
     const rows = menuItems.filter(m=>m.category===k); if (!rows.length) return "";
     return `<p class="eyebrow m-group">${esc(l)}</p>` + rows.map(m => `<div class="m-row${m.sold_out?" is-out":""}"><span class="nm">${esc(m.name)}<small>${esc(m.description)}</small></span>
     <label for="price-${esc(m.id)}"><span class="eyebrow" style="font-size:10px;margin:0">Price R</span><input id="price-${esc(m.id)}" data-id="${esc(m.id)}" inputmode="decimal" value="${m.price_zar}"></label>
     <button class="toggle" data-id="${esc(m.id)}" aria-pressed="${m.sold_out}">${m.sold_out?"Sold out":"In stock"}</button></div>`).join("");
-  }).join("") || `<div class="empty">No menu items yet.</div>`;
+  }).join("") || `<div class="empty">No menu items yet. Add the first one below.</div>`;
   $("#menu-list").querySelectorAll("input").forEach(i => i.onchange = async () => {
     const m = byId(i.dataset.id); const v = Math.round(parseFloat(i.value.replace(",", "."))*100)/100;
     if (isNaN(v) || v<0){ i.value = m.price_zar; toast("Enter a price like 45 or 42.50", true); return; }
@@ -608,16 +656,17 @@ function renderMenuAdmin(){
     if (error){ toast("Couldn't save: " + error.message, true); renderMenuAdmin(); return; }
     m.sold_out = next; if (next) delete cart[m.id];
     renderMenuAdmin(); renderGrid(); renderCart();
-    toast(next ? `${m.name} marked sold out · WhatsApp bot won't offer it` : `${m.name} back in stock`);
+    toast(next ? `${m.name} marked sold out${WA_ON ? " · WhatsApp bot won't offer it" : ""}` : `${m.name} back in stock`);
   });
 }
-$("#a-cat").innerHTML = CATS.map(([k,l]) => `<option value="${k}">${esc(l)}</option>`).join("");
+$("#a-cat").innerHTML = CATS.map(([k,l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join("");
 const slug = s => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g,"").trim().replace(/[\s_]+/g,"-").replace(/-+/g,"-");
 $("#add-form").onsubmit = async e => {
   e.preventDefault();
   const name = $("#a-name").value.trim(), category = $("#a-cat").value;
   const price = Math.round(parseFloat($("#a-price").value.replace(",", "."))*100)/100;
   if (!name){ toast("Give the item a name.", true); return; }
+  if (!category){ toast("Add menu categories to the shop settings first.", true); return; }
   if (isNaN(price) || price<0){ toast("Enter a price like 45 or 42.50", true); return; }
   let id = `${category}-${slug(name)}`.slice(0,60), n = 2;
   while (byId(id)) id = `${category}-${slug(name)}-${n++}`;
