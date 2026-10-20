@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KWING POS</title>
+<meta name="theme-color" content="#0D5A42">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: signage-style top bar, tabbed workspace — till grid + cart rail, kitchen columns, sales, menu editor */
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --surface-2:#F5F8F5; --ink:#14211C; --muted:#5B6B63; --line:#D7DFD9;
+  --brand:#0D5A42; --brand-ink:#FFFFFF; --mustard:#F2B705; --mustard-ink:#1D1600;
+  --chili:#C93A25; --ok:#1F8A4C; --warn:#B87900; --wa:#0B6152; --wa-ink:#FFFFFF;
+  --f-display:"Anton","Impact","Arial Narrow",sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1613; --surface:#16211D; --surface-2:#1C2924; --ink:#E6EEE9; --muted:#97A89F; --line:#2A3A33;
+  --brand:#2FA77B; --brand-ink:#05140E; --mustard:#F5C430; --mustard-ink:#1D1600;
+  --chili:#EF6A52; --ok:#4CC27F; --warn:#E3A63A; --wa:#128C7E; --wa-ink:#FFFFFF;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1613; --surface:#16211D; --surface-2:#1C2924; --ink:#E6EEE9; --muted:#97A89F; --line:#2A3A33;
+  --brand:#2FA77B; --brand-ink:#05140E; --mustard:#F5C430; --mustard-ink:#1D1600;
+  --chili:#EF6A52; --ok:#4CC27F; --warn:#E3A63A; --wa:#128C7E; --wa-ink:#FFFFFF;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:env(safe-area-inset-top,0px) calc(32px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Sign-in */
+.gate{min-height:80vh;display:grid;place-items:center;padding-block:32px}
+.gate-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:14px}
+.gate-card p{margin:0;color:var(--muted);font-size:14px}
+.gate-err{color:var(--chili);font-size:14px;font-weight:600}
+
+/* Top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:14px 10px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:32px;letter-spacing:1px;margin:0;line-height:1;text-transform:uppercase}
+.brand h1 span{background:var(--mustard);color:var(--mustard-ink);padding:0 5px;margin-left:1px}
+.brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.tabs{display:flex;gap:4px;overflow-x:auto;max-width:100%;margin-left:auto}
+.tab{border:1px solid transparent;background:none;padding:8px 14px;border-radius:999px;font-weight:600;white-space:nowrap;color:var(--muted);display:flex;gap:6px;align-items:center}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tab .count{background:var(--chili);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;min-width:18px;text-align:center}
+.status-line{font-size:12px;color:var(--muted);width:100%;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.status-line .who{margin-left:auto;display:flex;gap:8px;align-items:center}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;font-size:12px;font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:1px}
+.dot.live{background:var(--ok)}
+.dot.bad{background:var(--chili)}
+
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px}
+h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.4px;text-transform:uppercase;margin:0;text-wrap:balance}
+
+/* Till */
+.till{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:999px;font-weight:600;font-size:13px}
+.cat[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.item{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px;display:flex;flex-direction:column;gap:4px;min-height:118px;transition:transform .08s}
+.item:hover{border-color:var(--brand)}
+.item:active{transform:scale(.98)}
+.item b{font-size:15px;line-height:1.2}
+.item .desc{font-size:12px;color:var(--muted);flex:1}
+.item .price{font-family:var(--f-mono);font-weight:600;font-size:15px}
+.item .qtybadge{position:absolute;top:8px;right:8px;background:var(--mustard);color:var(--mustard-ink);font-weight:700;font-size:12px;border-radius:999px;padding:1px 8px}
+.item[disabled]{opacity:.5;cursor:not-allowed}
+.item[disabled]::after{content:"SOLD OUT";position:absolute;bottom:10px;right:10px;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--chili)}
+
+.cart{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);position:sticky;top:calc(env(safe-area-inset-top,0px) + 120px);display:flex;flex-direction:column}
+.cart-head{padding:14px 16px;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center}
+.cart-lines{padding:6px 16px;max-height:320px;overflow-y:auto}
+.line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.line:last-child{border-bottom:0}
+.line .nm{font-weight:600;font-size:14px;min-width:0}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stepper button{border:0;background:var(--surface-2);width:30px;height:30px;font-weight:700}
+.stepper span{width:26px;text-align:center;font-weight:600}
+.line .amt{font-family:var(--f-mono);font-size:13px;min-width:56px;text-align:right}
+.empty{color:var(--muted);font-size:14px;padding:22px 0;text-align:center}
+.cart-foot{padding:14px 16px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:0 0 var(--r) var(--r)}
+.total{display:flex;justify-content:space-between;align-items:baseline}
+.total strong{font-family:var(--f-display);font-weight:400;font-size:30px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.field input,.field select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--ink);font-weight:500;width:100%}
+.hint{font-size:11px;font-weight:500;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pay{display:flex;gap:6px;flex-wrap:wrap}
+.pay button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 6px;font-weight:600;font-size:13px}
+.pay button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600}
+.check input{width:18px;height:18px;accent-color:var(--brand)}
+.change{font-family:var(--f-mono);font-size:13px;color:var(--ok)}
+.btn{border:0;border-radius:8px;padding:12px 14px;font-weight:700;background:var(--brand);color:var(--brand-ink)}
+.btn.big{font-size:16px;padding:14px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.yellow{background:var(--mustard);color:var(--mustard-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:8px 10px;font-size:13px}
+
+/* Kitchen */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.col{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.col-body{display:flex;flex-direction:column;gap:10px}
+.col-head{display:flex;justify-content:space-between;align-items:center}
+.col-head h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:18px;text-transform:uppercase;letter-spacing:.5px}
+.col-head .n{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.ticket{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--muted);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.ticket.s-new{border-top-color:var(--chili)}
+.ticket.s-cooking{border-top-color:var(--warn)}
+.ticket.s-ready{border-top-color:var(--ok)}
+.ticket.ch-whatsapp{box-shadow:inset 4px 0 0 var(--wa)}
+.t-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.t-num{font-family:var(--f-mono);font-weight:600;font-size:16px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.chip.wa{background:var(--wa);color:var(--wa-ink);border-color:transparent;display:inline-flex;gap:4px;align-items:center}
+.chip.late{background:var(--chili);color:#fff;border-color:transparent}
+.chip.unpaid{border-color:var(--warn);color:var(--warn)}
+.t-items{margin:0;padding:0;list-style:none;font-size:14px}
+.t-items li{display:flex;gap:8px}
+.t-items li b{font-family:var(--f-mono);min-width:26px}
+.t-items li small{color:var(--muted)}
+.t-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.t-addr{font-size:13px;font-weight:600;background:var(--surface-2);border-left:3px solid var(--brand);padding:4px 8px}
+.t-note{font-size:13px;background:var(--surface-2);border-left:3px solid var(--mustard);padding:4px 8px}
+.t-actions{display:flex;gap:6px;flex-wrap:wrap}
+.t-actions .btn{flex:1}
+.col .empty{padding:30px 6px}
+.wa-note{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--wa);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:14px;max-width:80ch}
+.wa-note b{color:var(--ink)}
+
+/* Sales */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi .v{font-family:var(--f-display);font-size:32px;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.kpi .s{font-size:12px;color:var(--muted)}
+.sales-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.bar-row{display:grid;grid-template-columns:minmax(0,140px) minmax(0,1fr) 80px;gap:10px;align-items:center;font-size:13px;margin-bottom:8px}
+.bar-row .track{height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.bar-row .fill{display:block;height:100%;background:var(--brand)}
+.bar-row .fill.wa{background:var(--wa)}
+.bar-row .fill.m{background:var(--mustard)}
+.bar-row span:last-child{text-align:right;font-family:var(--f-mono)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.r,th.r{text-align:right}
+
+/* Menu editor */
+.menu-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.m-group{grid-column:1/-1;margin:10px 0 0}
+.m-row{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) 92px auto;gap:10px;align-items:center}
+.m-row.is-out{border-color:var(--chili)}
+.m-row .nm{font-weight:600;min-width:0}
+.m-row .nm small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.m-row input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface-2);font-family:var(--f-mono)}
+.toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;min-width:78px}
+.toggle[aria-pressed="true"]{background:var(--chili);color:#fff;border-color:transparent}
+.toggle:disabled{opacity:.6}
+.add-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end;margin-top:12px}
+
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.toast.err{background:var(--chili);color:#fff}
+
+@media (max-width:900px){
+  .till,.sales-grid{grid-template-columns:minmax(0,1fr)}
+  .cart{position:static}
+  .board{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tabs{margin-left:0}
+}
+@media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.item{min-height:110px}.m-row{grid-template-columns:minmax(0,1fr) 80px}.m-row .toggle{grid-column:1/-1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- SIGN-IN -->
+<section class="gate" id="gate">
+  <form class="gate-card" id="signin" novalidate>
+    <div class="brand"><h1>KW<span>ING</span></h1><small>Staff point of sale</small></div>
+    <p id="gate-msg">Sign in with your KWING staff email and password.</p>
+    <label class="field" for="si-email">Email<input id="si-email" type="email" autocomplete="username" required></label>
+    <label class="field" for="si-pass">Password<input id="si-pass" type="password" autocomplete="current-password" required></label>
+    <div class="gate-err" id="si-err" role="alert" hidden></div>
+    <button class="btn big" id="si-btn">Sign in</button>
+  </form>
+  <div class="gate-card" id="not-staff" hidden>
+    <div class="brand"><h1>KW<span>ING</span></h1></div>
+    <h2>Not on the KWING staff list</h2>
+    <p id="ns-email"></p>
+    <button class="btn ghost" id="ns-out">Sign out</button>
+  </div>
+  <div class="gate-card" id="checking" hidden><p>Checking your account…</p></div>
+</section>
+
+<div id="app" hidden>
+<header class="top">
+  <div class="brand"><h1>KW<span>ING</span></h1><small>Point of sale</small></div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-view="till" aria-selected="true">Till</button>
+    <button class="tab" role="tab" data-view="kitchen" aria-selected="false">Kitchen <span class="count" id="kitchen-count" hidden>0</span></button>
+    <button class="tab" role="tab" data-view="sales" aria-selected="false">Sales</button>
+    <button class="tab" role="tab" data-view="menu" aria-selected="false">Menu</button>
+  </nav>
+  <div class="status-line"><span><i class="dot" id="sync-dot"></i><span id="sync-text">Connecting…</span></span><span id="clock" class="num"></span>
+    <span class="who"><span id="who"></span><button class="linkbtn" id="sign-out">Sign out</button></span></div>
+</header>
+
+<!-- TILL -->
+<section class="view" id="view-till">
+  <div class="till">
+    <div>
+      <div class="cats" id="cats"></div>
+      <div class="grid" id="grid"><div class="empty">Loading the menu…</div></div>
+    </div>
+    <aside class="cart" aria-label="Current order">
+      <div class="cart-head"><h2>Order</h2><button class="btn ghost sm" id="clear-cart">Clear</button></div>
+      <div class="cart-lines" id="cart-lines"></div>
+      <div class="cart-foot">
+        <div class="total"><span class="eyebrow" style="margin:0">Total</span><strong class="num" id="cart-total">R0</strong></div>
+        <div class="row2">
+          <label class="field" for="c-name">Customer<input id="c-name" placeholder="Walk-in" autocomplete="off"></label>
+          <label class="field" for="c-type">Order type<select id="c-type"><option value="collect">Collect / eat-in</option><option value="delivery">Delivery (+R15)</option></select></label>
+        </div>
+        <label class="field" for="c-addr" id="addr-field" hidden>Delivery address<input id="c-addr" placeholder="e.g. 14 Mahlangu St, Zone 3" autocomplete="off"></label>
+        <label class="field" for="c-phone">WhatsApp number (optional)<input id="c-phone" inputmode="tel" placeholder="082 123 4567" autocomplete="off"><span class="hint">We'll WhatsApp them when it's ready.</span></label>
+        <label class="field" for="c-note">Kitchen note<input id="c-note" placeholder="e.g. no atchar, extra chilli" autocomplete="off"></label>
+        <div class="pay" id="pay"><button data-pay="cash" aria-pressed="true">Cash</button><button data-pay="card" aria-pressed="false">Card</button><button data-pay="eft" aria-pressed="false">EFT</button></div>
+        <label class="check" for="c-paid"><input type="checkbox" id="c-paid" checked> Paid now</label>
+        <div class="row2" id="cash-row">
+          <label class="field" for="c-tender">Cash received<input id="c-tender" inputmode="decimal" placeholder="R0"></label>
+          <div class="field">Change<span class="change num" id="c-change">—</span></div>
+        </div>
+        <button class="btn big" id="checkout" disabled>Send to kitchen</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- KITCHEN -->
+<section class="view" id="view-kitchen" hidden>
+  <div class="section-head"><div><p class="eyebrow">Live order board</p><h2>Kitchen</h2></div><span class="t-meta">Till and WhatsApp orders land here together. Tickets older than 20 min are flagged.</span></div>
+  <div class="wa-note"><span aria-hidden="true">💬</span><span><b>WhatsApp orders come in by themselves.</b> Customers order on the KWING WhatsApp number and the bot puts confirmed orders on this board. When you tap <b>Mark ready</b> on an order with a phone number, the customer gets a WhatsApp message.</span></div>
+  <div class="board">
+    <div class="col"><div class="col-head"><h3>New</h3><span class="n" id="n-new">0</span></div><div class="col-body" id="col-new"></div></div>
+    <div class="col"><div class="col-head"><h3>Cooking</h3><span class="n" id="n-cooking">0</span></div><div class="col-body" id="col-cooking"></div></div>
+    <div class="col"><div class="col-head"><h3>Ready</h3><span class="n" id="n-ready">0</span></div><div class="col-body" id="col-ready"></div></div>
+  </div>
+</section>
+
+<!-- SALES -->
+<section class="view" id="view-sales" hidden>
+  <div class="section-head"><div><p class="eyebrow" id="sales-date">Today</p><h2>Sales</h2></div><button class="btn ghost sm" id="reload-sales">Refresh</button></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Takings</div><div class="v num" id="k-rev">R0</div><div class="s" id="k-rev-s"></div></div>
+    <div class="kpi"><div class="l">Orders</div><div class="v num" id="k-orders">0</div><div class="s" id="k-orders-s"></div></div>
+    <div class="kpi"><div class="l">Paid</div><div class="v num" id="k-paid">R0</div><div class="s" id="k-paid-s"></div></div>
+    <div class="kpi"><div class="l">Unpaid</div><div class="v num" id="k-unpaid">R0</div><div class="s" id="k-unpaid-s"></div></div>
+  </div>
+  <div class="sales-grid">
+    <div class="panel"><p class="eyebrow">By channel</p><div id="chan-mix"></div><p class="eyebrow" style="margin-top:16px">Payments</p><div id="pay-mix"></div></div>
+    <div class="panel"><p class="eyebrow">Best sellers (units)</p><div id="top-items"></div></div>
+  </div>
+  <div class="panel" style="margin-top:16px"><p class="eyebrow">Today's orders</p><div class="tbl-wrap"><table><thead><tr><th>No.</th><th>Time</th><th>Customer</th><th>Channel</th><th>Items</th><th>Payment</th><th>Status</th><th class="r">Total</th></tr></thead><tbody id="orders-tbody"></tbody></table></div></div>
+</section>
+
+<!-- MENU -->
+<section class="view" id="view-menu" hidden>
+  <div class="section-head"><div><p class="eyebrow">Prices &amp; stock</p><h2>Menu</h2></div><span class="t-meta">Changes save straight away. The WhatsApp bot uses this menu too, so sold-out items stop being offered at once.</span></div>
+  <div class="menu-list" id="menu-list"></div>
+  <div class="panel" style="margin-top:18px">
+    <p class="eyebrow">Add a menu item</p>
+    <form class="add-form" id="add-form">
+      <label class="field" for="a-name">Name<input id="a-name" required placeholder="e.g. Cheese Kota"></label>
+      <label class="field" for="a-cat">Category<select id="a-cat"></select></label>
+      <label class="field" for="a-price">Price (R)<input id="a-price" inputmode="decimal" required placeholder="45"></label>
+      <label class="field" for="a-desc">Description<input id="a-desc" placeholder="What's in it"></label>
+      <button class="btn">Add item</button>
+    </form>
+  </div>
+</section>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js" integrity="sha384-YieCqqg9gQufX7+5HcFvCEg/n3KUEdl8/Jb+A6J0npf1mB740VayvwKjTrtCeUoy" crossorigin="anonymous"></script>
+<script>
+/* Public project URL + anon key: safe in the browser. Row Level Security limits staff data to people on public.kwing_staff. */
+const SUPABASE_URL = "https://wyxxrwrexjslkqygfcka.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5eHhyd3JleGpzbGtxeWdmY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTYyMTAsImV4cCI6MjEwNTMzMjIxMH0.88XbKcDYV6ebiXKCqjIaVV-0U-bGWRgXYbyIHO_c7ws";
+const DELIVERY_FEE = 15;
+const CATS = [["kota","Kotas"],["bunny","Bunny chows"],["pap","Pap plates"],["sides","Sides"],["drinks","Drinks"]];
+const CAT_NAME = Object.fromEntries(CATS);
+const PAY_NAME = {cash:"Cash", card:"Card", eft:"EFT"};
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+
+let menuItems = [];          // rows of public.menu_items
+let orders = new Map();      // id -> row of public.orders (today's + any still open)
+let cart = {};               // item_id -> qty
+let cat = "all", payMethod = "cash";
+let channel = null, started = false, currentUserId = null;
+
+const $ = s => document.querySelector(s);
+const R = n => "R" + (Math.round(Number(n)*100)/100).toLocaleString("en-ZA",{minimumFractionDigits:0,maximumFractionDigits:2});
+const cents = n => Math.round(Number(n)*100);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const byId = id => menuItems.find(m => m.id === id);
+const t0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const ts = o => new Date(o.created_at).getTime();
+const allOrders = () => [...orders.values()].sort((a,b) => ts(b)-ts(a));
+const todays = () => allOrders().filter(o => ts(o) >= t0().getTime());
+const active = () => allOrders().filter(o => ["new","cooking","ready"].includes(o.status));
+const hhmm = t => new Date(t).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
+const itemsOf = o => Array.isArray(o.items) ? o.items : [];
+
+function toast(msg, err=false){ const t=$("#toast"); t.textContent=msg; t.classList.toggle("err", err); t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true, err?5000:2600); }
+function setSync(state, text){ $("#sync-dot").className = "dot" + (state==="live"?" live":state==="bad"?" bad":""); $("#sync-text").textContent = text; }
+
+/* SA numbers: 082 123 4567 -> 27821234567. Returns "" for empty, null for invalid. */
+function normPhone(v){
+  let d = String(v||"").replace(/\D/g,"");
+  if (!d) return "";
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.length===10 && d.startsWith("0")) d = "27" + d.slice(1);
+  if (d.length===9) d = "27" + d;
+  return /^\d{10,15}$/.test(d) ? d : null;
+}
+
+/* ---------- Auth gate ---------- */
+function showGate(which, msg){
+  $("#app").hidden = true; $("#gate").hidden = false;
+  $("#signin").hidden = which!=="signin"; $("#not-staff").hidden = which!=="notstaff"; $("#checking").hidden = which!=="checking";
+  if (which==="signin"){ $("#si-err").hidden = !msg; $("#si-err").textContent = msg||""; }
+}
+$("#signin").onsubmit = async e => {
+  e.preventDefault();
+  const email = $("#si-email").value.trim(), password = $("#si-pass").value;
+  if (!email || !password){ showGate("signin","Enter your email and password."); return; }
+  $("#si-btn").disabled = true; $("#si-btn").textContent = "Signing in…";
+  const {error} = await sb.auth.signInWithPassword({email, password});
+  $("#si-btn").disabled = false; $("#si-btn").textContent = "Sign in";
+  if (error){ showGate("signin", /invalid/i.test(error.message) ? "That email and password don't match. Check them and try again." : "Couldn't sign in: " + error.message); return; }
+  $("#si-pass").value = "";
+};
+async function doSignOut(){ await sb.auth.signOut(); }
+$("#ns-out").onclick = doSignOut; $("#sign-out").onclick = doSignOut;
+
+async function onSession(session){
+  if (!session){ stopLive(); currentUserId = null; showGate("signin"); return; }
+  if (session.user.id === currentUserId && started) return;
+  currentUserId = session.user.id;
+  showGate("checking");
+  const {data, error} = await sb.rpc("is_kwing_staff");
+  if (error){ showGate("signin", "Couldn't check the staff list. Check your internet and sign in again."); await sb.auth.signOut(); return; }
+  if (!data){ $("#ns-email").textContent = "Signed in as " + (session.user.email||"") + ". Ask the owner to add you."; showGate("notstaff"); return; }
+  $("#who").textContent = session.user.email || "";
+  $("#gate").hidden = true; $("#app").hidden = false;
+  startApp();
+}
+sb.auth.onAuthStateChange((event, session) => {
+  if (event==="TOKEN_REFRESHED") return;
+  setTimeout(() => onSession(session), 0);   // don't await supabase calls inside the callback
+});
+
+/* ---------- Data ---------- */
+async function loadMenu(){
+  const {data, error} = await sb.from("menu_items").select("*").order("sort_order").order("name");
+  if (error){ toast("Couldn't load the menu. Check your internet.", true); return; }
+  menuItems = data.map(m => ({...m, price_zar:Number(m.price_zar)}));
+  for (const id of Object.keys(cart)) if (!byId(id) || byId(id).sold_out) delete cart[id];
+  renderCats(); renderGrid(); renderCart(); renderMenuAdmin();
+}
+async function loadOrders(){
+  const {data, error} = await sb.from("orders").select("*")
+    .or(`status.in.(new,cooking,ready),created_at.gte.${t0().toISOString()}`)
+    .order("created_at",{ascending:false}).limit(500);
+  if (error){ setSync("bad","Couldn't load orders · check your internet"); return false; }
+  orders = new Map(data.map(o => [o.id, o]));
+  renderAll(); return true;
+}
+function startLive(){
+  stopLive();
+  channel = sb.channel("kwing-orders")
+    .on("postgres_changes", {event:"*", schema:"public", table:"orders"}, p => {
+      if (p.eventType==="DELETE"){ orders.delete(p.old.id); }
+      else {
+        const isNew = p.eventType==="INSERT" && !orders.has(p.new.id);
+        orders.set(p.new.id, p.new);
+        if (isNew && p.new.channel==="whatsapp") toast(`New WhatsApp order #${p.new.order_number}`);
+      }
+      renderAll();
+    })
+    .subscribe(status => {
+      if (status==="SUBSCRIBED"){ setSync("live","Live · till and WhatsApp orders"); loadOrders(); }
+      else if (status==="CHANNEL_ERROR" || status==="TIMED_OUT" || status==="CLOSED") setSync("bad","Live updates paused · reconnecting…");
+    });
+}
+function stopLive(){ if (channel){ sb.removeChannel(channel); channel = null; } started = false; }
+async function startApp(){
+  if (started) return; started = true;
+  setSync("", "Connecting…");
+  await Promise.all([loadMenu(), loadOrders()]);
+  startLive();
+}
+// Safety net: refresh when the tablet wakes up or comes back online, and every 2 minutes
+document.addEventListener("visibilitychange", () => { if (!document.hidden && started){ loadOrders(); loadMenu(); } });
+window.addEventListener("online", () => { if (started){ loadOrders(); loadMenu(); } });
+setInterval(() => { if (started) loadOrders(); }, 120000);
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showView(b.dataset.view));
+function showView(v){
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.view===v));
+  document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== "view-"+v);
+  try{ localStorage.setItem("kwing-tab", v); }catch(e){}
+}
+try{ const t = localStorage.getItem("kwing-tab"); if (t && document.getElementById("view-"+t)) showView(t); }catch(e){}
+
+/* ---------- Till ---------- */
+function renderCats(){
+  const list = [["all","All"], ...CATS.filter(([k]) => menuItems.some(m => m.category===k))];
+  $("#cats").innerHTML = list.map(([k,l]) => `<button class="cat" aria-pressed="${k===cat}" data-cat="${k}">${esc(l)}</button>`).join("");
+  $("#cats").querySelectorAll(".cat").forEach(b => b.onclick = () => { cat=b.dataset.cat; renderCats(); renderGrid(); });
+}
+function renderGrid(){
+  const items = menuItems.filter(m => cat==="all" || m.category===cat);
+  $("#grid").innerHTML = items.length ? items.map(m => `<button class="item" data-id="${esc(m.id)}" ${m.sold_out?"disabled":""}>
+    ${cart[m.id]?`<span class="qtybadge">${cart[m.id]}</span>`:""}
+    <b>${esc(m.name)}</b><span class="desc">${esc(m.description)}</span><span class="price num">${R(m.price_zar)}</span></button>`).join("")
+    : `<div class="empty">No menu items yet. Add some on the Menu tab.</div>`;
+  $("#grid").querySelectorAll(".item").forEach(b => b.onclick = () => { cart[b.dataset.id]=(cart[b.dataset.id]||0)+1; renderGrid(); renderCart(); });
+}
+const isDelivery = () => $("#c-type").value==="delivery";
+function cartLines(){ return Object.entries(cart).filter(([id,q]) => q>0 && byId(id)); }
+function cartSums(){
+  const sub = cartLines().reduce((s,[id,q]) => s + cents(byId(id).price_zar)*q, 0);
+  const fee = sub>0 && isDelivery() ? DELIVERY_FEE*100 : 0;
+  return {sub, fee, total: sub+fee};   // in cents
+}
+function renderCart(){
+  const lines = cartLines();
+  $("#addr-field").hidden = !isDelivery();
+  $("#cart-lines").innerHTML = lines.length ? lines.map(([id,q]) => { const m=byId(id); return `<div class="line"><span class="nm">${esc(m.name)}</span>
+    <span class="stepper"><button data-d="-1" data-id="${esc(id)}" aria-label="One less">−</button><span class="num">${q}</span><button data-d="1" data-id="${esc(id)}" aria-label="One more">+</button></span>
+    <span class="amt num">${R(m.price_zar*q)}</span></div>`; }).join("") + (isDelivery()?`<div class="line"><span class="nm">Delivery</span><span></span><span class="amt num">${R(DELIVERY_FEE)}</span></div>`:"")
+    : `<div class="empty">Tap menu items to start an order.</div>`;
+  $("#cart-lines").querySelectorAll(".stepper button").forEach(b => b.onclick = () => {
+    const id=b.dataset.id; cart[id]=(cart[id]||0)+Number(b.dataset.d); if(cart[id]<=0) delete cart[id]; renderGrid(); renderCart(); });
+  const t = cartSums().total/100;
+  $("#cart-total").textContent = R(t);
+  $("#checkout").disabled = !lines.length;
+  $("#cash-row").hidden = payMethod!=="cash" || !$("#c-paid").checked;
+  const tender = parseFloat(($("#c-tender").value||"").replace(/[^\d.]/g,""));
+  $("#c-change").textContent = !isNaN(tender) && t>0 ? (tender>=t ? R(tender-t) : "Short " + R(t-tender)) : "—";
+  $("#c-change").style.color = !isNaN(tender) && tender<t ? "var(--chili)" : "var(--ok)";
+}
+$("#clear-cart").onclick = () => { cart={}; renderGrid(); renderCart(); };
+$("#c-type").onchange = renderCart; $("#c-tender").oninput = renderCart; $("#c-paid").onchange = renderCart;
+$("#pay").querySelectorAll("button").forEach(b => b.onclick = () => {
+  payMethod=b.dataset.pay; $("#pay").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); renderCart(); });
+$("#checkout").onclick = async () => {
+  const lines = cartLines(); if (!lines.length) return;
+  const {sub, fee, total} = cartSums();
+  const address = $("#c-addr").value.trim();
+  if (isDelivery() && !address){ toast("Add the delivery address.", true); $("#c-addr").focus(); return; }
+  const phone = normPhone($("#c-phone").value);
+  if (phone===null){ toast("That WhatsApp number doesn't look right. Use e.g. 082 123 4567.", true); $("#c-phone").focus(); return; }
+  const paid = $("#c-paid").checked;
+  const tender = parseFloat(($("#c-tender").value||"").replace(/[^\d.]/g,""));
+  if (paid && payMethod==="cash" && !isNaN(tender) && cents(tender)<total){ toast("Cash received is less than the total.", true); return; }
+  const row = {
+    channel:"counter",
+    items: lines.map(([id,q]) => { const m=byId(id); return {item_id:m.id, name:m.name, qty:q, unit_price:m.price_zar, line_total:(cents(m.price_zar)*q)/100}; }),
+    customer_name: $("#c-name").value.trim() || "Walk-in",
+    phone: phone || null,
+    fulfilment: isDelivery() ? "delivery" : "collect",
+    address: isDelivery() ? address : null,
+    note: $("#c-note").value.trim() || null,
+    payment: payMethod, paid,
+    subtotal_zar: sub/100, delivery_fee_zar: fee/100, total_zar: total/100,
+  };
+  $("#checkout").disabled = true; $("#checkout").textContent = "Sending…";
+  const {data, error} = await sb.from("orders").insert(row).select("*").single();
+  $("#checkout").textContent = "Send to kitchen";
+  if (error){ $("#checkout").disabled = false; toast("Couldn't save the order: " + error.message, true); return; }
+  orders.set(data.id, data); renderAll();
+  cart={}; ["#c-name","#c-note","#c-tender","#c-addr","#c-phone"].forEach(s => $(s).value=""); $("#c-type").value="collect"; $("#c-paid").checked = true;
+  renderGrid(); renderCart();
+  toast(`Order #${data.order_number} sent to the kitchen · ${R(data.total_zar)}`);
+};
+
+/* ---------- Kitchen ---------- */
+const NEXT = {new:["cooking","Start cooking"], cooking:["ready","Mark ready"], ready:["collected","Collected"]};
+async function updateOrder(id, patch, okMsg){
+  const {data, error} = await sb.from("orders").update(patch).eq("id", id).select("*").single();
+  if (error){ toast("Couldn't update that order: " + error.message, true); renderKitchen(); return; }
+  orders.set(data.id, data); renderAll(); if (okMsg) toast(okMsg);
+}
+function renderKitchen(){
+  const now = Date.now();
+  ["new","cooking","ready"].forEach(s => {
+    const list = active().filter(o=>o.status===s).sort((a,b)=>ts(a)-ts(b));
+    $("#n-"+s).textContent = list.length;
+    $("#col-"+s).innerHTML = list.length ? list.map(o => {
+      const mins = Math.floor((now-ts(o))/60000);
+      const wa = o.channel==="whatsapp";
+      const deliv = o.fulfilment==="delivery";
+      const nextLabel = s==="ready" && !o.paid ? "Paid & collected" : NEXT[s][1];
+      return `<article class="ticket s-${s} ch-${esc(o.channel)}">
+        <div class="t-top"><span class="t-num">#${esc(o.order_number)}</span><span class="chips">
+          ${wa?`<span class="chip wa">WhatsApp</span>`:`<span class="chip">Counter</span>`}
+          ${deliv?`<span class="chip">Delivery</span>`:""}
+          ${o.paid?"":`<span class="chip unpaid">Unpaid</span>`}
+          ${mins>=20 && s!=="ready"?`<span class="chip late">${mins} min</span>`:""}</span></div>
+        <ul class="t-items">${itemsOf(o).map(i=>`<li><b>${esc(i.qty)}×</b><span>${esc(i.name)}${i.note?` <small>(${esc(i.note)})</small>`:""}</span></li>`).join("")}</ul>
+        ${deliv?`<div class="t-addr">📍 ${esc(o.address)}</div>`:""}
+        ${o.note?`<div class="t-note">${esc(o.note)}</div>`:""}
+        <div class="t-meta"><span>${esc(o.customer_name||"Customer")}</span>${o.phone?`<span class="num">+${esc(o.phone)}</span>`:""}<span>${hhmm(o.created_at)} · ${mins} min ago</span><span class="num">${R(o.total_zar)} · ${o.paid?esc(PAY_NAME[o.payment]||o.payment)+" paid":"pay "+esc(PAY_NAME[o.payment]||o.payment)+" on "+(deliv?"delivery":"collection")}</span></div>
+        <div class="t-actions">
+          ${s!=="ready" && !o.paid?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-paid="1">Mark paid</button>`:""}
+          <button class="btn sm ${s==="ready"?"ghost":s==="cooking"?"yellow":""}" data-id="${esc(o.id)}" data-next="${NEXT[s][0]}">${nextLabel}</button>
+        </div>
+      </article>`; }).join("") : `<div class="empty">${s==="new"?"No new orders. Till and WhatsApp orders appear here.":s==="cooking"?"Nothing on the stove.":"Nothing waiting for pickup."}</div>`;
+  });
+  document.querySelectorAll("#view-kitchen [data-next]").forEach(b => b.onclick = () => {
+    b.disabled = true; const o = orders.get(b.dataset.id); const next = b.dataset.next;
+    const patch = {status:next}; if (next==="collected" && !o.paid) patch.paid = true;
+    updateOrder(b.dataset.id, patch, next==="ready" && o.phone ? `#${o.order_number} ready · WhatsApp message on its way` : null);
+  });
+  document.querySelectorAll("#view-kitchen [data-paid]").forEach(b => b.onclick = () => { b.disabled = true; updateOrder(b.dataset.id, {paid:true}, "Marked paid"); });
+  const nNew = active().filter(o=>o.status==="new").length;
+  $("#kitchen-count").textContent = nNew; $("#kitchen-count").hidden = !nNew;
+  document.title = nNew ? `(${nNew}) KWING POS` : "KWING POS";
+}
+
+/* ---------- Sales ---------- */
+function bars(el, rows, cls=""){
+  const max = Math.max(1, ...rows.map(r=>r[1]));
+  el.innerHTML = rows.length ? rows.map(([k,v,label]) => `<div class="bar-row"><span>${esc(k)}</span><span class="track"><span class="fill ${cls}" style="width:${(v/max*100).toFixed(1)}%"></span></span><span>${esc(label ?? v)}</span></div>`).join("") : `<div class="empty">No sales yet today.</div>`;
+}
+function renderSales(){
+  const t = todays();
+  const sum = list => list.reduce((s,o)=>s+cents(o.total_zar),0)/100;
+  $("#sales-date").textContent = new Date().toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"});
+  const paid = t.filter(o=>o.paid), unpaid = t.filter(o=>!o.paid);
+  const wa = t.filter(o=>o.channel==="whatsapp"), ctr = t.filter(o=>o.channel!=="whatsapp");
+  $("#k-rev").textContent = R(sum(t)); $("#k-rev-s").textContent = t.length ? "Average " + R(sum(t)/t.length) : "";
+  $("#k-orders").textContent = t.length; $("#k-orders-s").textContent = `${ctr.length} counter · ${wa.length} WhatsApp`;
+  $("#k-paid").textContent = R(sum(paid)); $("#k-paid-s").textContent = `${paid.length} order${paid.length===1?"":"s"}`;
+  $("#k-unpaid").textContent = R(sum(unpaid)); $("#k-unpaid-s").textContent = `${unpaid.length} order${unpaid.length===1?"":"s"} still to pay`;
+  bars($("#chan-mix"), t.length ? [["Counter", sum(ctr), `${R(sum(ctr))}`], ["WhatsApp", sum(wa), `${R(sum(wa))}`]] : [], "wa");
+  const pm = {}; t.forEach(o=>{ const k=o.paid?(PAY_NAME[o.payment]||o.payment):"Unpaid"; pm[k]=(pm[k]||0)+cents(o.total_zar)/100; });
+  bars($("#pay-mix"), Object.entries(pm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v,R(v)]), "m");
+  const units = {}; t.forEach(o=>itemsOf(o).forEach(i=>units[i.name]=(units[i.name]||0)+Number(i.qty||0)));
+  bars($("#top-items"), Object.entries(units).sort((a,b)=>b[1]-a[1]).slice(0,8));
+  const st = s => s[0].toUpperCase()+s.slice(1);
+  $("#orders-tbody").innerHTML = t.length ? t.map(o=>`<tr><td class="num">#${esc(o.order_number)}</td><td class="num">${hhmm(o.created_at)}</td><td>${esc(o.customer_name||"")}</td><td>${o.channel==="whatsapp"?`<span class="chip wa">WhatsApp</span>`:"Counter"}</td><td>${itemsOf(o).reduce((s,i)=>s+Number(i.qty||0),0)} items</td><td>${o.paid?esc(PAY_NAME[o.payment]||o.payment):`<span class="chip unpaid">Unpaid</span>`}</td><td>${esc(st(o.status))}</td><td class="r num">${R(o.total_zar)}</td></tr>`).join("")
+    : `<tr><td colspan="8"><div class="empty">No orders yet today. Ring one up on the Till, or wait for a WhatsApp order.</div></td></tr>`;
+}
+$("#reload-sales").onclick = async () => { if (await loadOrders()) toast("Sales refreshed"); };
+
+/* ---------- Menu editor ---------- */
+function renderMenuAdmin(){
+  $("#menu-list").innerHTML = CATS.map(([k,l]) => {
+    const rows = menuItems.filter(m=>m.category===k); if (!rows.length) return "";
+    return `<p class="eyebrow m-group">${esc(l)}</p>` + rows.map(m => `<div class="m-row${m.sold_out?" is-out":""}"><span class="nm">${esc(m.name)}<small>${esc(m.description)}</small></span>
+    <label for="price-${esc(m.id)}"><span class="eyebrow" style="font-size:10px;margin:0">Price R</span><input id="price-${esc(m.id)}" data-id="${esc(m.id)}" inputmode="decimal" value="${m.price_zar}"></label>
+    <button class="toggle" data-id="${esc(m.id)}" aria-pressed="${m.sold_out}">${m.sold_out?"Sold out":"In stock"}</button></div>`).join("");
+  }).join("") || `<div class="empty">No menu items yet.</div>`;
+  $("#menu-list").querySelectorAll("input").forEach(i => i.onchange = async () => {
+    const m = byId(i.dataset.id); const v = Math.round(parseFloat(i.value.replace(",", "."))*100)/100;
+    if (isNaN(v) || v<0){ i.value = m.price_zar; toast("Enter a price like 45 or 42.50", true); return; }
+    if (v===m.price_zar) return;
+    i.disabled = true;
+    const {error} = await sb.from("menu_items").update({price_zar:v}).eq("id", m.id);
+    i.disabled = false;
+    if (error){ i.value = m.price_zar; toast("Couldn't save the price: " + error.message, true); return; }
+    m.price_zar = v; renderGrid(); renderCart(); toast(`${m.name} is now ${R(v)}`);
+  });
+  $("#menu-list").querySelectorAll(".toggle").forEach(b => b.onclick = async () => {
+    const m = byId(b.dataset.id); const next = !m.sold_out;
+    b.disabled = true; b.textContent = "Saving…";
+    const {error} = await sb.from("menu_items").update({sold_out:next}).eq("id", m.id);
+    if (error){ toast("Couldn't save: " + error.message, true); renderMenuAdmin(); return; }
+    m.sold_out = next; if (next) delete cart[m.id];
+    renderMenuAdmin(); renderGrid(); renderCart();
+    toast(next ? `${m.name} marked sold out · WhatsApp bot won't offer it` : `${m.name} back in stock`);
+  });
+}
+$("#a-cat").innerHTML = CATS.map(([k,l]) => `<option value="${k}">${esc(l)}</option>`).join("");
+const slug = s => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g,"").trim().replace(/[\s_]+/g,"-").replace(/-+/g,"-");
+$("#add-form").onsubmit = async e => {
+  e.preventDefault();
+  const name = $("#a-name").value.trim(), category = $("#a-cat").value;
+  const price = Math.round(parseFloat($("#a-price").value.replace(",", "."))*100)/100;
+  if (!name){ toast("Give the item a name.", true); return; }
+  if (isNaN(price) || price<0){ toast("Enter a price like 45 or 42.50", true); return; }
+  let id = `${category}-${slug(name)}`.slice(0,60), n = 2;
+  while (byId(id)) id = `${category}-${slug(name)}-${n++}`;
+  const inCat = menuItems.filter(m=>m.category===category);
+  const sort_order = (inCat.length ? Math.max(...inCat.map(m=>m.sort_order)) : Math.max(0, ...menuItems.map(m=>m.sort_order))) + 1;
+  const {error} = await sb.from("menu_items").insert({id, category, name, description:$("#a-desc").value.trim(), price_zar:price, sold_out:false, sort_order});
+  if (error){ toast("Couldn't add the item: " + error.message, true); return; }
+  e.target.reset(); toast(`${name} added to the menu`); loadMenu();
+};
+
+function renderAll(){ renderKitchen(); renderSales(); }
+function tick(){ $("#clock").textContent = new Date().toLocaleString("en-ZA",{weekday:"short",hour:"2-digit",minute:"2-digit"}); }
+setInterval(() => { tick(); if (started) renderKitchen(); }, 30000); tick();
+renderCart();
+</script>
+</body>
+</html>
