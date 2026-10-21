@@ -48,6 +48,10 @@ window.SHOP_CONFIG = {
   "yoco": {
     "enabled": false
   },
+  "webOrder": {
+    "function": "kwing-web-order",
+    "whatsapp": "15556659827"
+  },
   "receipt": {
     "address": "139 Mgwambi Street, Kabokweni Rd, Kabokweni, 1245",
     "phone": "079 552 4163",
