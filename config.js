@@ -52,7 +52,7 @@ window.SHOP_CONFIG = {
     "address": "",
     "phone": "079 552 4163",
     "vatNumber": "",
-    "footer": "Thanks for ordering at KWING. Sharp!"
+    "footer": "Thanks for ordering at KWING. Sharp!\nOrder on WhatsApp: 079 552 4163"
   },
   "supabase": {
     "url": "https://wyxxrwrexjslkqygfcka.supabase.co",

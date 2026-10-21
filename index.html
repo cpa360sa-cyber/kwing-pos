@@ -869,7 +869,7 @@ function receiptLines(o, {tendered=null}={}){
     L.push(ln.row("Cash", money(tendered)), ln.row("Change", money(tendered - total)));
   }
   if (vat) L.push(ln.row("Incl. VAT @ 15%", money(Math.round(cents(total) * 15 / 115) / 100)));
-  L.push(ln.hr(), ln.c(RCPT.footer || "Thank you!"));
+  L.push(ln.hr(), ...String(RCPT.footer || "Thank you!").split("\n").filter(s => s.trim()).map(s => ln.c(s.trim())));
   if (!vat) L.push(ln.c("This is not a tax invoice"));
   return L;
 }
