@@ -50,9 +50,9 @@ window.SHOP_CONFIG = {
   },
   "receipt": {
     "address": "",
-    "phone": "",
+    "phone": "079 552 4163",
     "vatNumber": "",
-    "footer": ""
+    "footer": "Thanks for ordering at KWING. Sharp!"
   },
   "supabase": {
     "url": "https://wyxxrwrexjslkqygfcka.supabase.co",
