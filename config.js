@@ -49,7 +49,7 @@ window.SHOP_CONFIG = {
     "enabled": false
   },
   "receipt": {
-    "address": "",
+    "address": "139 Mgwambi Street, Kabokweni Rd, Kabokweni, 1245",
     "phone": "079 552 4163",
     "vatNumber": "",
     "footer": "Thanks for ordering at KWING. Sharp!\nOrder on WhatsApp: 079 552 4163"
