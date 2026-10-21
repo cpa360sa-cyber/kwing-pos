@@ -45,6 +45,15 @@ window.SHOP_CONFIG = {
   "whatsapp": {
     "enabled": true
   },
+  "yoco": {
+    "enabled": false
+  },
+  "receipt": {
+    "address": "",
+    "phone": "",
+    "vatNumber": "",
+    "footer": ""
+  },
   "supabase": {
     "url": "https://wyxxrwrexjslkqygfcka.supabase.co",
     "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5eHhyd3JleGpzbGtxeWdmY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTYyMTAsImV4cCI6MjEwNTMzMjIxMH0.88XbKcDYV6ebiXKCqjIaVV-0U-bGWRgXYbyIHO_c7ws",
