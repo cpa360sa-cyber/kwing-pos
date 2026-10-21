@@ -200,28 +200,33 @@ td.r,th.r{text-align:right}
 .modal .pstate.bad{color:var(--chili)}
 .modal .acts{display:flex;gap:8px;flex-wrap:wrap}
 .modal .acts .btn{flex:1}
-/* Receipts: #print-area is the only thing on paper; its width follows the printer settings */
+/* Slips: one layout for the on-screen preview, the printer, and the PDF/PNG copies.
+   On paper, #print-area is the only thing shown; its width follows the printer settings. */
 #print-area{display:none}
 .modal .field select{background:var(--surface)}
 .modal .check{font-weight:600;font-size:14px}
+.slip{font:12px/1.35 "JetBrains Mono",ui-monospace,Consolas,monospace;color:#000;background:#fff}
+.slip.w58{width:54mm}
+.slip.w80{width:74mm}
+.slip .pr-c{text-align:center}
+.slip .pr-b{font-weight:700}
+.slip .pr-big{font-size:17px;font-weight:700}
+.slip .pr-row{display:flex;justify-content:space-between;gap:6px}
+.slip .pr-row span:first-child{min-width:0;overflow-wrap:anywhere}
+.slip .pr-row span:last-child{white-space:nowrap}
+.slip .pr-hr{border-top:1px dashed #000;margin:4px 0}
+.slip .pr-sub{padding-left:3ch}
+.modal.wide{max-width:420px}
+.slip-paper{align-self:center;background:#fff;padding:14px 12px;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.25);max-width:100%;overflow-x:auto}
+.slip-paper .pr-doc + .pr-doc{margin-top:14px;padding-top:14px;border-top:2px dashed #000}
 @media print{
   @page{margin:3mm}
   html,body{background:#fff!important;color:#000!important;padding:0!important;margin:0!important}
   body::before{display:none!important}
   body > *:not(#print-area){display:none!important}
-  #print-area{display:block!important;font:12px/1.35 "JetBrains Mono",ui-monospace,Consolas,monospace;color:#000}
-  #print-area.w58{width:54mm}
-  #print-area.w80{width:74mm}
+  #print-area{display:block!important}
   .pr-doc{break-after:page;page-break-after:always}
   .pr-doc:last-child{break-after:auto;page-break-after:auto}
-  .pr-c{text-align:center}
-  .pr-b{font-weight:700}
-  .pr-big{font-size:17px;font-weight:700}
-  .pr-row{display:flex;justify-content:space-between;gap:6px}
-  .pr-row span:first-child{min-width:0;overflow-wrap:anywhere}
-  .pr-row span:last-child{white-space:nowrap}
-  .pr-hr{border-top:1px dashed #000;margin:4px 0}
-  .pr-sub{padding-left:3ch}
 }
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
 .toast.err{background:var(--chili);color:#fff}
@@ -236,7 +241,7 @@ td.r,th.r{text-align:right}
 @media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.item{min-height:110px}.m-row{grid-template-columns:minmax(0,1fr) 80px}.m-row .toggle{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-<script src="config.js?v=mvhexmw0"></script>
+<script src="config.js?v=mvijfn76"></script>
 <script>
 /* Apply the shop's colours before first paint. */
 (function(){
@@ -407,15 +412,33 @@ td.r,th.r{text-align:right}
       <option value="off">No printer</option>
     </select></label>
     <label class="field" for="pr-width">Paper width<select id="pr-width"><option value="58">58 mm (small)</option><option value="80">80 mm (standard)</option></select></label>
-    <label class="check" for="pr-auto"><input type="checkbox" id="pr-auto"> Print a receipt after every sale</label>
-    <label class="check" for="pr-kitchen"><input type="checkbox" id="pr-kitchen"> Also print a kitchen ticket with each sale</label>
+    <label class="check" for="pr-onnew"><input type="checkbox" id="pr-onnew"> Kitchen slip for every new order (till and WhatsApp)</label>
+    <label class="field" for="pr-receipt">Customer receipt<select id="pr-receipt">
+      <option value="ready">When the order is marked Ready</option>
+      <option value="collected">When the order is Collected</option>
+      <option value="sale">At the till, when a paid sale goes to the kitchen</option>
+      <option value="off">Only when I tap Receipt</option>
+    </select></label>
+    <label class="field" for="pr-action">When a slip is due<select id="pr-action">
+      <option value="print">Print it automatically</option>
+      <option value="show">Show it first, with Print, Save PDF and Save PNG</option>
+    </select></label>
     <label class="check" for="pr-drawer" id="pr-drawer-wrap"><input type="checkbox" id="pr-drawer"> Open the cash drawer for cash sales</label>
     <p class="hint" id="pr-help"></p>
     <div class="acts"><button type="button" class="btn ghost" id="pr-test">Test print</button><button class="btn">Save</button></div>
   </form>
 </div>
 
-<div id="print-area" aria-hidden="true"></div>
+<div class="modal-back" id="slip-modal" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="slip-title">
+    <h2 id="slip-title">Slip</h2>
+    <div class="slip-paper" id="slip-paper"><div class="slip w80" id="slip-view"></div></div>
+    <div class="acts"><button class="btn" id="slip-print" type="button">Print</button><button class="btn ghost" id="slip-pdf" type="button">Save PDF</button><button class="btn ghost" id="slip-png" type="button">Save PNG</button></div>
+    <div class="acts"><button class="btn ghost" id="slip-close" type="button">Close</button></div>
+  </div>
+</div>
+
+<div id="print-area" class="slip w80" aria-hidden="true"></div>
 
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -573,6 +596,7 @@ function startLive(){
         const isNew = p.eventType==="INSERT" && !orders.has(p.new.id);
         orders.set(p.new.id, p.new);
         if (isNew && p.new.channel==="whatsapp" && inBranch(p.new)) toast(`New WhatsApp order #${p.new.order_number}`);
+        if (isNew && inBranch(p.new) && p.new.status === "new") onNewOrder(p.new);
         if (payCur && p.new.id === payCur.order_id && p.new.paid) payDone();
       }
       renderAll();
@@ -729,8 +753,10 @@ $("#checkout").onclick = async () => {
   $("#checkout").disabled = true; $("#checkout").textContent = "Sending…";
   const {data, error} = await sb.from("orders").insert(row).select("*").single();
   if (error){ renderCart(); toast("Couldn't save the order: " + error.message, true); return; }
+  const tendered = payMethod === "cash" && !isNaN(tender) ? tender : null;
+  lastSale = {order:data, tendered}; $("#reprint").hidden = false;
   if (yoco) openPayment(data, yoco === "yoco_machine" ? "card_machine" : "link");
-  else printAfterSale(data, payMethod === "cash" && !isNaN(tender) ? tender : null);
+  onNewOrder(data, {sale: !yoco, tendered});
   orders.set(data.id, data); renderAll();
   cart={}; ["#c-name","#c-note","#c-tender","#c-addr","#c-phone"].forEach(s => $(s).value=""); $("#c-type").value="collect"; $("#c-paid").checked = true;
   renderGrid(); renderCart();
@@ -741,8 +767,9 @@ $("#checkout").onclick = async () => {
 const NEXT = {new:["cooking","Start cooking"], cooking:["ready","Mark ready"], ready:["collected","Collected"]};
 async function updateOrder(id, patch, okMsg){
   const {data, error} = await sb.from("orders").update(patch).eq("id", id).select("*").single();
-  if (error){ toast("Couldn't update that order: " + error.message, true); renderKitchen(); return; }
+  if (error){ toast("Couldn't update that order: " + error.message, true); renderKitchen(); return null; }
   orders.set(data.id, data); renderAll(); if (okMsg) toast(okMsg);
+  return data;
 }
 function renderKitchen(){
   const now = Date.now();
@@ -768,7 +795,8 @@ function renderKitchen(){
         <div class="t-actions">
           ${!o.paid && YOCO_ON && payCaps.payLinks?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-yoco="link">Pay link</button>`:""}
           ${!o.paid && YOCO_ON && payCaps.cardMachine?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-yoco="card_machine">Card machine</button>`:""}
-          ${printer.mode!=="off"?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-print="1" title="Print kitchen ticket">Print</button>`:""}
+          <button class="btn sm ghost" data-id="${esc(o.id)}" data-print="1" title="Kitchen slip: print or save">Slip</button>
+          ${s==="ready"?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-rcpt="1" title="Customer receipt: print or save">Receipt</button>`:""}
           ${s!=="ready" && !o.paid?`<button class="btn sm ghost" data-id="${esc(o.id)}" data-paid="1">Mark paid</button>`:""}
           <button class="btn sm ${s==="ready"?"ghost":s==="cooking"?"yellow":""}" data-id="${esc(o.id)}" data-next="${NEXT[s][0]}">${nextLabel}</button>
         </div>
@@ -777,11 +805,13 @@ function renderKitchen(){
   document.querySelectorAll("#view-kitchen [data-next]").forEach(b => b.onclick = () => {
     b.disabled = true; const o = orders.get(b.dataset.id); const next = b.dataset.next;
     const patch = {status:next}; if (next==="collected" && !o.paid) patch.paid = true;
-    updateOrder(b.dataset.id, patch, next==="ready" && o.phone && WA_ON ? `#${o.order_number} ready · WhatsApp message on its way` : null);
+    updateOrder(b.dataset.id, patch, next==="ready" && o.phone && WA_ON ? `#${o.order_number} ready · WhatsApp message on its way` : null)
+      .then(d => { if (d) onStatusChange(d, next); });
   });
   document.querySelectorAll("#view-kitchen [data-paid]").forEach(b => b.onclick = () => { b.disabled = true; updateOrder(b.dataset.id, {paid:true}, "Marked paid"); });
   document.querySelectorAll("#view-kitchen [data-yoco]").forEach(b => b.onclick = () => openPayment(orders.get(b.dataset.id), b.dataset.yoco));
-  document.querySelectorAll("#view-kitchen [data-print]").forEach(b => b.onclick = () => printKitchen(orders.get(b.dataset.id)));
+  document.querySelectorAll("#view-kitchen [data-print]").forEach(b => b.onclick = () => openKitchen(orders.get(b.dataset.id)));
+  document.querySelectorAll("#view-kitchen [data-rcpt]").forEach(b => b.onclick = () => openReceipt(orders.get(b.dataset.id)));
   const nNew = active().filter(o=>o.status==="new").length;
   $("#kitchen-count").textContent = nNew; $("#kitchen-count").hidden = !nNew;
   document.title = nNew ? `(${nNew}) ${SHOP} POS` : `${SHOP} POS`;
@@ -817,19 +847,29 @@ function renderSales(){
     }).sort((a,b) => b[1]-a[1]));
   }
   const st = s => s[0].toUpperCase()+s.slice(1);
-  $("#orders-tbody").innerHTML = t.length ? t.map(o=>`<tr><td class="num">#${esc(o.order_number)}</td><td class="num">${hhmm(o.created_at)}</td><td>${esc(o.customer_name||"")}</td><td>${o.channel==="whatsapp"?`<span class="chip wa">WhatsApp</span>`:"Counter"}</td><td>${itemsOf(o).reduce((s,i)=>s+Number(i.qty||0),0)} items</td><td>${o.paid?esc(PAY_NAME[o.payment]||o.payment):`<span class="chip unpaid">Unpaid</span>`}</td><td>${esc(st(o.status))}</td><td class="r num">${R(o.total_zar)}</td><td>${printer.mode!=="off"?`<button class="linkbtn" data-receipt="${esc(o.id)}">Receipt</button>`:""}</td></tr>`).join("")
+  $("#orders-tbody").innerHTML = t.length ? t.map(o=>`<tr><td class="num">#${esc(o.order_number)}</td><td class="num">${hhmm(o.created_at)}</td><td>${esc(o.customer_name||"")}</td><td>${o.channel==="whatsapp"?`<span class="chip wa">WhatsApp</span>`:"Counter"}</td><td>${itemsOf(o).reduce((s,i)=>s+Number(i.qty||0),0)} items</td><td>${o.paid?esc(PAY_NAME[o.payment]||o.payment):`<span class="chip unpaid">Unpaid</span>`}</td><td>${esc(st(o.status))}</td><td class="r num">${R(o.total_zar)}</td><td><button class="linkbtn" data-receipt="${esc(o.id)}">Receipt</button></td></tr>`).join("")
     : `<tr><td colspan="9"><div class="empty">No orders yet today. Ring one up on the Till.</div></td></tr>`;
 }
-$("#orders-tbody").onclick = e => { const b = e.target.closest("[data-receipt]"); if (b) printReceipt(orders.get(b.dataset.receipt)); };
+$("#orders-tbody").onclick = e => { const b = e.target.closest("[data-receipt]"); if (b) openReceipt(orders.get(b.dataset.receipt)); };
 $("#reload-sales").onclick =async () => { if (await loadOrders()) toast("Sales refreshed"); };
 
 /* ---------- Receipts & kitchen tickets ----------
    One layout (a list of lines) feeds both outputs: HTML for the browser's print dialog, and ESC/POS bytes
    for the RawBT Android app, which prints straight to Bluetooth/USB thermal printers. */
 const RCPT = CFG?.receipt || {};
-const PRINTER_DEFAULT = {mode:"browser", width:58, auto:false, kitchen:false, drawer:false};
+// action: "print" = straight to the printer, "show" = preview with Print / Save PDF / Save PNG.
+// receiptWhen: "ready" | "collected" | "sale" | "off"
+const PRINTER_DEFAULT = {mode:"browser", width:80, action:"print", onNew:true, receiptWhen:"ready", drawer:false};
 let printer = {...PRINTER_DEFAULT};
-try{ printer = {...PRINTER_DEFAULT, ...JSON.parse(localStorage.getItem("pos-printer") || "{}")}; }catch(e){}
+try{
+  const saved = JSON.parse(localStorage.getItem("pos-printer") || "{}");
+  if (saved.receiptWhen === undefined && "auto" in saved){   // settings saved by the first version
+    saved.receiptWhen = saved.auto ? "sale" : PRINTER_DEFAULT.receiptWhen;
+    saved.onNew = true;
+  }
+  delete saved.auto; delete saved.kitchen;
+  printer = {...PRINTER_DEFAULT, ...saved};
+}catch(e){}
 let lastSale = null;   // {order, tendered} for "Reprint last"
 
 const money = n => "R" + (cents(n)/100).toFixed(2);
@@ -944,8 +984,12 @@ function linesToEscPos(docs, {drawer=false}={}){
   return new Uint8Array(B);
 }
 
+/* Printing. Browsers always show their print screen (they don't allow silent printing), so an automatic slip
+   opens that screen by itself; staff tap Print. Chrome started with --kiosk-printing skips the screen entirely.
+   Jobs are queued so orders that arrive together print one after the other. */
+const printQueue = []; let printing = false;
 function printDocs(docs, {drawer=false}={}){
-  if (printer.mode === "off"){ toast("No printer set up on this device. Tap Printer at the top.", true); return; }
+  if (printer.mode === "off"){ toast("No printer set up on this device. Tap Printer at the top, or use Save PDF / Save PNG.", true); return; }
   if (printer.mode === "rawbt"){
     const bytes = linesToEscPos(docs, {drawer});
     let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
@@ -953,41 +997,133 @@ function printDocs(docs, {drawer=false}={}){
     window.location.href = `intent:base64,${btoa(bin)}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
     return;
   }
+  printQueue.push(docs); pumpPrint();
+}
+function pumpPrint(){
+  if (printing || !printQueue.length) return;
+  printing = true;
   const area = $("#print-area");
-  area.className = printer.width == 80 ? "w80" : "w58";
-  area.innerHTML = docs.map(linesToHtml).join("");
+  area.className = "slip " + (printer.width == 80 ? "w80" : "w58");
+  area.innerHTML = printQueue.shift().map(linesToHtml).join("");
+  let done = false;
+  const next = () => { if (done) return; done = true; window.removeEventListener("afterprint", next); printing = false; setTimeout(pumpPrint, 400); };
+  window.addEventListener("afterprint", next);
+  setTimeout(next, 6000);   // some browsers never fire afterprint
   window.print();
 }
-const printReceipt = (o, opts) => printDocs([receiptLines(o, opts)]);
-const printKitchen = o => printDocs([kitchenLines(o)]);
-function printAfterSale(o, tendered){
-  lastSale = {order:o, tendered}; $("#reprint").hidden = printer.mode === "off";
-  if (!printer.auto || printer.mode === "off") return;
-  const docs = [receiptLines(o, {tendered}), ...(printer.kitchen ? [kitchenLines(o)] : [])];
-  printDocs(docs, {drawer: printer.drawer && o.paid && o.payment === "cash"});
+
+/* Slip preview: print it, or save it as a PDF or PNG (e.g. to WhatsApp it to a customer). */
+let slipJob = null;
+function showSlip(docs, name, {drawer=false, title="Slip"}={}){
+  slipJob = {docs, name, drawer};
+  const v = $("#slip-view");
+  v.className = "slip " + (printer.width == 80 ? "w80" : "w58");
+  v.innerHTML = docs.map(linesToHtml).join("");
+  $("#slip-title").textContent = title;
+  $("#slip-modal").hidden = false; $("#slip-print").focus();
 }
-$("#reprint").onclick = () => lastSale && printReceipt(orders.get(lastSale.order.id) || lastSale.order, {tendered:lastSale.tendered});
+const closeSlip = () => { $("#slip-modal").hidden = true; slipJob = null; };
+$("#slip-close").onclick = closeSlip;
+$("#slip-modal").onclick = e => { if (e.target.id === "slip-modal") closeSlip(); };
+$("#slip-print").onclick = () => { if (slipJob){ const j = slipJob; closeSlip(); printDocs(j.docs, {drawer:j.drawer}); } };
+
+// The PDF/PNG libraries are only loaded the first time someone saves a slip.
+const LIBS = {
+  html2canvas: {src:"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", sri:"sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H", ready:() => window.html2canvas},
+  jspdf: {src:"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", sri:"sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk", ready:() => window.jspdf?.jsPDF},
+};
+function loadLib(name){
+  const L = LIBS[name];
+  if (L.ready()) return Promise.resolve();
+  return L.p ||= new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = L.src; s.integrity = L.sri; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer";
+    s.onload = () => res(); s.onerror = () => { L.p = null; rej(new Error("Couldn't load " + name)); };
+    document.head.appendChild(s);
+  });
+}
+async function slipCanvas(){
+  await loadLib("html2canvas");
+  return html2canvas($("#slip-paper"), {scale:3, backgroundColor:"#ffffff", logging:false});
+}
+function saveBlob(blob, filename){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+async function saveSlip(kind, btn){
+  if (!slipJob) return;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    if (kind === "pdf") await loadLib("jspdf");
+    const canvas = await slipCanvas();
+    if (kind === "png"){
+      const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+      saveBlob(blob, slipJob.name + ".png");
+    } else {
+      const w = printer.width == 80 ? 80 : 58, h = Math.round(canvas.height * w / canvas.width);
+      const pdf = new jspdf.jsPDF({unit:"mm", format:[w, h], orientation: h >= w ? "portrait" : "landscape"});
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, w, h);   // JPEG keeps the PDF small
+      saveBlob(pdf.output("blob"), slipJob.name + ".pdf");
+    }
+    toast(kind === "pdf" ? "PDF saved to Downloads" : "Picture saved to Downloads");
+  }catch(err){ toast("Couldn't save it. Check your internet and try again.", true); }
+  btn.disabled = false; btn.textContent = label;
+}
+$("#slip-pdf").onclick = e => saveSlip("pdf", e.currentTarget);
+$("#slip-png").onclick = e => saveSlip("png", e.currentTarget);
+
+/* What prints when */
+const slipName = (o, kind) => `${slug(SHOP) || "pos"}-order-${o.order_number}-${kind}`;
+function autoSlip(docs, name, opts={}){
+  if (printer.mode === "off" || !docs.length) return;
+  // RawBT can only be opened from a tap, so without one the slip waits on screen for staff to tap Print.
+  const needsTap = printer.mode === "rawbt" && !navigator.userActivation?.isActive;
+  if (printer.action === "show" || needsTap) showSlip(docs, name, opts);
+  else printDocs(docs, opts);
+}
+const autoDone = new Set();   // orders already handled on this device
+function onNewOrder(o, {sale=false, tendered=null}={}){
+  if (!o || autoDone.has(o.id)) return;
+  autoDone.add(o.id);
+  const docs = [];
+  if (printer.onNew && o.status === "new") docs.push(kitchenLines(o));
+  const receipt = sale && printer.receiptWhen === "sale" && o.paid;
+  if (receipt) docs.push(receiptLines(o, {tendered}));
+  autoSlip(docs, slipName(o, receipt && !printer.onNew ? "receipt" : "kitchen"),
+    {drawer: receipt && printer.drawer && o.payment === "cash", title:`Order #${o.order_number}`});
+}
+function onStatusChange(o, status){
+  if (printer.receiptWhen === status) autoSlip([receiptLines(o)], slipName(o, "receipt"), {title:`Receipt #${o.order_number}`});
+}
+const openReceipt = (o, opts) => o && showSlip([receiptLines(o, opts)], slipName(o, "receipt"), {title:`Receipt #${o.order_number}`});
+const openKitchen = o => o && showSlip([kitchenLines(o)], slipName(o, "kitchen"), {title:`Kitchen slip #${o.order_number}`});
+$("#reprint").onclick = () => lastSale && openReceipt(orders.get(lastSale.order.id) || lastSale.order, {tendered:lastSale.tendered});
 
 /* Printer settings (per device, kept in this browser) */
 function printerHelp(){
   const m = $("#pr-mode").value;
   $("#pr-drawer-wrap").hidden = m !== "rawbt";
   $("#pr-help").textContent = m === "rawbt"
-    ? "Install the free RawBT app from the Play Store, pair your printer in it, and choose the printer inside RawBT. A cash drawer plugs into the printer."
-    : m === "browser" ? "Uses this device's normal print screen. On Android, add your printer's print service (or RawBT) in Settings → Printing." : "Print buttons are hidden.";
+    ? "Install the free RawBT app from the Play Store, pair your printer in it, and choose the printer inside RawBT. A cash drawer plugs into the printer. Slips that come in by themselves wait on screen for one tap on Print."
+    : m === "browser" ? "Uses this device's print screen, which opens by itself when a slip is due: tap Print. On a Windows PC, a Chrome shortcut with --kiosk-printing prints with no screen at all. On Android, add your printer's print service (or RawBT) in Settings → Printing."
+    : "Nothing prints. You can still open slips and save them as PDF or PNG.";
 }
 $("#printer-open").onclick = () => {
   $("#pr-mode").value = printer.mode; $("#pr-width").value = String(printer.width);
-  $("#pr-auto").checked = printer.auto; $("#pr-kitchen").checked = printer.kitchen; $("#pr-drawer").checked = printer.drawer;
+  $("#pr-onnew").checked = printer.onNew; $("#pr-receipt").value = printer.receiptWhen;
+  $("#pr-action").value = printer.action; $("#pr-drawer").checked = printer.drawer;
   printerHelp(); $("#printer-modal").hidden = false; $("#pr-mode").focus();
 };
 $("#pr-mode").onchange = printerHelp;
-const readPrinterForm = () => ({mode:$("#pr-mode").value, width:Number($("#pr-width").value), auto:$("#pr-auto").checked, kitchen:$("#pr-kitchen").checked, drawer:$("#pr-drawer").checked});
+const readPrinterForm = () => ({mode:$("#pr-mode").value, width:Number($("#pr-width").value), onNew:$("#pr-onnew").checked,
+  receiptWhen:$("#pr-receipt").value, action:$("#pr-action").value, drawer:$("#pr-drawer").checked});
 $("#printer-form").onsubmit = e => {
   e.preventDefault();
   printer = readPrinterForm();
   try{ localStorage.setItem("pos-printer", JSON.stringify(printer)); }catch(err){}
-  $("#printer-modal").hidden = true; $("#reprint").hidden = !lastSale || printer.mode === "off";
+  $("#printer-modal").hidden = true;
   renderKitchen(); renderSales(); toast("Printer settings saved");
 };
 $("#pr-test").onclick = () => {
@@ -998,7 +1134,7 @@ $("#pr-test").onclick = () => {
   printer = saved;
 };
 $("#printer-modal").onclick = e => { if (e.target.id === "printer-modal") $("#printer-modal").hidden = true; };
-document.addEventListener("keydown", e => { if (e.key === "Escape") $("#printer-modal").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#printer-modal").hidden = true; if (!$("#slip-modal").hidden) closeSlip(); } });
 
 /* ---------- Menu editor ---------- */
 // Head-office view edits menu_items; a branch view edits that branch's row in branch_menu.
@@ -1146,7 +1282,7 @@ function payDone(){
   payState("Paid ✓", "ok"); toast(`Order #${payCur.order.order_number} paid`);
   const id = payCur.order_id;
   payCur = null; $("#pay-send").hidden = true;
-  loadOrders().then(() => { const o = orders.get(id); if (o?.paid) printAfterSale(o, null); });
+  loadOrders().then(() => { const o = orders.get(id); if (o?.paid && printer.receiptWhen === "sale") autoSlip([receiptLines(o)], slipName(o, "receipt"), {title:`Receipt #${o.order_number}`}); });
 }
 function closePayment(){ clearInterval(payTimer); payCur = null; $("#pay-modal").hidden = true; }
 $("#pay-close").onclick = closePayment;
